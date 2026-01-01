@@ -1,0 +1,57 @@
+# Dependencies
+node_modules
+.pnpm-store
+__pycache__
+*.py[cod]
+.venv
+venv
+
+# Build outputs
+.next
+out
+dist
+build
+*.egg-info
+
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Testing
+coverage
+.pytest_cache
+.nyc_output
+
+# Logs
+logs
+*.log
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+
+# Documentation
+*.md
+!README.md
+docs
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Turbo
+.turbo
+
+# Local development
+infra/docker/init-db

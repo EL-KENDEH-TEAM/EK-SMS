@@ -1,0 +1,107 @@
+# EK-SMS Development Infrastructure
+# Usage: docker-compose up -d
+
+name: ek-sms
+
+services:
+  # ============================================
+  # PostgreSQL Database
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: eksms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-eksms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eksms_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-eksms_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/docker/init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-eksms} -d ${POSTGRES_DB:-eksms_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - eksms-network
+
+  # ============================================
+  # Redis (Sessions & Caching)
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: eksms-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eksms-network
+
+  # ============================================
+  # Mailpit (Email Testing)
+  # ============================================
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: eksms-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP server
+      - "8025:8025"   # Web UI
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    networks:
+      - eksms-network
+
+  # ============================================
+  # pgAdmin (Database Management UI)
+  # ============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: eksms-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@eksms.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eksms-network
+
+# ============================================
+# Persistent Volumes
+# ============================================
+volumes:
+  postgres_data:
+    name: eksms-postgres-data
+  redis_data:
+    name: eksms-redis-data
+  pgadmin_data:
+    name: eksms-pgadmin-data
+
+# ============================================
+# Network
+# ============================================
+networks:
+  eksms-network:
+    name: eksms-network
+    driver: bridge
