@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env.local",
+        env_file=("../../.env.local", "../../.env", ".env.local", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     # API Server
     # ==========================================
     api_host: str = "0.0.0.0"
-    api_port: int = 8000
+    api_port: int = 8002
     api_secret_key: str = Field(min_length=32)
 
     # ==========================================
