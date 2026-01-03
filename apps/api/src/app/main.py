@@ -9,12 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from app.core.config import settings
-from app.core.database import async_session_maker, init_db, close_db
-from app.core.redis import init_redis, close_redis, redis_client
+from app.core.database import async_session_maker, close_db, init_db
+from app.core.redis import close_redis, init_redis, redis_client
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     """
     Application lifespan manager.
 
@@ -105,7 +105,6 @@ async def debug_db():
 @app.get("/debug/redis", tags=["Debug"])
 async def debug_redis():
     """Test Redis connection."""
-    from app.core.redis import redis_client
 
     try:
         if redis_client:
