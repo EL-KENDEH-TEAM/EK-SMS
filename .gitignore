@@ -7,8 +7,11 @@ __pypackages__/
 .venv/
 venv/
 env/
-.env/
-.env.staging/
+.env
+.env.local
+.env.staging
+.env.production
+.env.*
 
 # ================================
 # Build Outputs
