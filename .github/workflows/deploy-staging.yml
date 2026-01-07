@@ -12,7 +12,7 @@ jobs:
   deploy-api:
     name: Deploy API to Render (Staging)
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'El-Kendeh'
+    if: github.repository_owner == 'EL-KENDEH-TEAM'
     steps:
       - name: Deploy via Render Hook
         run: |
