@@ -1,0 +1,33 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-api:
+    name: Deploy API to Render (Prod)
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Trigger Render Production Deploy
+        run: |
+          curl -X POST ${{ secrets.RENDER_PROD_API_DEPLOY_HOOK }}
+
+  deploy-web:
+    name: Deploy Web to Vercel (Prod)
+    runs-on: ubuntu-latest
+    environment: production
+    needs: deploy-api # Ensures API is updated before the production frontend goes live
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--prod --build-env NEXT_PUBLIC_API_URL=${{ secrets.PROD_API_URL }}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}

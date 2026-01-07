@@ -1,0 +1,33 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: staging-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-api:
+    name: Deploy API to Render (Staging)
+    runs-on: ubuntu-latest
+    # FIXED: Replace placeholder with your real username
+    if: github.repository_owner == 'El-Kendeh'
+    steps:
+      - name: Deploy via Render Hook
+        run: |
+          curl -X POST ${{ secrets.RENDER_STAGING_API_DEPLOY_HOOK }}
+
+  deploy-web:
+    name: Deploy Web to Vercel (Staging)
+    runs-on: ubuntu-latest
+    # FIXED: Added the same safety check here
+    if: github.repository_owner == 'El-Kendeh'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Placeholder Vercel Deploy
+        # This keeps the pipeline successful until you add VERCEL_TOKEN
+        run: echo "Vercel account not yet linked. Skipping deployment step."

@@ -1,0 +1,22 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cmd /c scripts\\dev.cmd || bash scripts/dev.sh",
+    "dev:win": "cmd /c scripts\\dev.cmd",
+    "dev:unix": "bash scripts/dev.sh",
+    "start": "uvicorn src.app.main:app --host 0.0.0.0 --port 8000",
+    "lint": "ruff check .",
+    "lint:fix": "ruff check . --fix",
+    "format": "ruff format .",
+    "format:check": "ruff format . --check",
+    "type-check": "mypy src",
+    "test": "pytest",
+    "test:coverage": "pytest --cov=src --cov-report=html",
+    "db:migrate": "cd src && alembic -c ../alembic.ini upgrade head",
+    "db:rollback": "cd src && alembic -c ../alembic.ini downgrade -1",
+    "db:migration": "cd src && alembic -c ../alembic.ini revision --autogenerate -m",
+    "db:seed": "python -m scripts.seed"
+  }
+}
