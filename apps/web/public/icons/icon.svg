@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Book/School icon -->
+  <g fill="white">
+    <!-- Open book shape -->
+    <path d="M256 120 C200 120 150 140 120 170 L120 360 C150 330 200 310 256 310 C312 310 362 330 392 360 L392 170 C362 140 312 120 256 120 Z" fill="white" opacity="0.9"/>
+    <!-- Book spine -->
+    <rect x="248" y="120" width="16" height="200" fill="white"/>
+    <!-- Left page lines -->
+    <rect x="145" y="180" width="85" height="8" rx="4" fill="#1e40af" opacity="0.3"/>
+    <rect x="145" y="210" width="75" height="8" rx="4" fill="#1e40af" opacity="0.3"/>
+    <rect x="145" y="240" width="80" height="8" rx="4" fill="#1e40af" opacity="0.3"/>
+    <!-- Right page lines -->
+    <rect x="282" y="180" width="85" height="8" rx="4" fill="#1e40af" opacity="0.3"/>
+    <rect x="282" y="210" width="75" height="8" rx="4" fill="#1e40af" opacity="0.3"/>
+    <rect x="282" y="240" width="80" height="8" rx="4" fill="#1e40af" opacity="0.3"/>
+    <!-- EK text -->
+    <text x="256" y="420" font-family="Arial, sans-serif" font-size="80" font-weight="bold" text-anchor="middle" fill="white">EK</text>
+  </g>
+</svg>

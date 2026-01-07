@@ -127,6 +127,19 @@ docker-compose.override.yml
 *.key
 *.crt
 !*.example.pem
-```
 
----
+# ================================
+# PWA (next-pwa generated files)
+# ================================
+# These are auto-generated during build
+apps/web/public/sw.js
+apps/web/public/sw.js.map
+apps/web/public/workbox-*.js
+apps/web/public/workbox-*.js.map
+apps/web/public/worker-*.js
+apps/web/public/worker-*.js.map
+
+# ================================
+# Vercel
+# ================================
+.vercel

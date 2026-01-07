@@ -18,7 +18,7 @@ export default {
         "revert",   // Revert previous commit
       ],
     ],
-    "subject-case": [2, "always", "lower-case"],
+    "subject-case": [0], // Disabled - allows proper nouns, class names, etc.
     "subject-empty": [2, "never"],
     "type-empty": [2, "never"],
   },
