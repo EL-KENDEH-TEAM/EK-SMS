@@ -3,4 +3,5 @@
  */
 
 export * from "./auth";
-export * from "./layouts"
+export * from "./layouts";
+export { PWAInstallPrompt } from "./PWAInstallPrompt";
