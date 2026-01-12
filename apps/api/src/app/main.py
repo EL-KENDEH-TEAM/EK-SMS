@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
+from app.api import api_router
 from app.core.config import settings
 from app.core.database import async_session_maker, close_db, init_db
 from app.core.redis import close_redis, init_redis, redis_client
@@ -58,6 +59,8 @@ app = FastAPI(
     redoc_url="/redoc" if settings.is_development else None,
     lifespan=lifespan,
 )
+
+app.include_router(api_router, prefix="/api/v1")
 
 # CORS configuration
 app.add_middleware(
