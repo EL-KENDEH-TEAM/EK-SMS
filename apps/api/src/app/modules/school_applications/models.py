@@ -51,6 +51,8 @@ class ApplicationStatus(str, enum.Enum):
     AWAITING_APPLICANT_VERIFICATION = "awaiting_applicant_verification"
     AWAITING_PRINCIPAL_CONFIRMATION = "awaiting_principal_confirmation"
     PENDING_REVIEW = "pending_review"
+    UNDER_REVIEW = "under_review"
+    MORE_INFO_REQUESTED = "more_info_requested"
     APPROVED = "approved"
     REJECTED = "rejected"
     EXPIRED = "expired"
