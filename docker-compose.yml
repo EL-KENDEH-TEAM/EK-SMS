@@ -11,6 +11,9 @@ services:
     image: postgres:16-alpine
     container_name: eksms-postgres
     restart: unless-stopped
+    env_file:
+      - .env
+      - .env.local
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-eksms}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eksms_dev_password}
@@ -57,8 +60,8 @@ services:
     container_name: eksms-mailpit
     restart: unless-stopped
     ports:
-      - "1025:1025"   # SMTP server
-      - "8025:8025"   # Web UI
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1

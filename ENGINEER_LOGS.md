@@ -81,3 +81,99 @@ pnpm dev
 ---
 
 **Result:** The application successfully started without errors, and the infinite refresh loop was eliminated.
+
+---
+
+# 🛠️ Debug Log: Ruff Linter - Unused Import in `__init__.py`
+
+**Date:** 2026-01-12
+**Status:** Resolved ✅
+**Environment:** Windows 11, pnpm Monorepo, FastAPI + Ruff
+
+---
+
+## 🛑 Error Symptoms
+
+When trying to commit with `git commit`, the pre-commit hook (lint-staged + ruff) failed with an unused import error.
+
+**Terminal Output:**
+
+```text
+✖ apps/api/.venv/Scripts/ruff check --fix:
+F401 `.router.router` imported but unused; consider removing, adding to `__all__`, or using a redundant alias
+ --> apps/api/src/app/modules/school_applications/__init__.py:1:31
+  |
+1 | from .router import router as school_applications_router
+  |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+help: Use an explicit re-export: `router as router`
+
+Found 5 errors (4 fixed, 1 remaining).
+husky - pre-commit script failed (code 1)
+```
+
+---
+
+## 🔍 Root Cause
+
+In Python, when you import something in `__init__.py` purely for **re-exporting** (so other modules can import it from the package), linters like Ruff flag it as "unused" because the imported name isn't actually used within that file.
+
+**Problematic Code:**
+
+```python
+# __init__.py
+from .router import router as school_applications_router  # ← Alias not used HERE
+```
+
+The alias `school_applications_router` was meant to be imported by `api.py`, but since it's not used within `__init__.py` itself, Ruff considers it an unused import (F401).
+
+---
+
+## 💡 Solution & Resolution Steps
+
+### Option 1: Use `__all__` (Recommended)
+
+Explicitly declare what the module exports using `__all__`. This tells Python and linters that the import is intentional for re-export.
+
+**Fixed Code:**
+
+```python
+# __init__.py
+from .router import router
+
+__all__ = ["router"]
+```
+
+### Option 2: Redundant Alias
+
+Use the same name for the alias to signal explicit re-export:
+
+```python
+from .router import router as router  # Explicit re-export
+```
+
+### Option 3: Keep Aliasing in the Consumer
+
+Keep `__init__.py` simple and do the aliasing where it's actually used:
+
+```python
+# __init__.py
+from .router import router
+
+__all__ = ["router"]
+
+# api.py (consumer)
+from app.modules.school_applications import router as school_applications_router
+```
+
+---
+
+## 📝 Key Takeaway
+
+When re-exporting in `__init__.py`, always use `__all__` to explicitly declare exports. This:
+
+- Satisfies linters (Ruff, Pylint, Pyright)
+- Documents the public API of your module
+- Follows Python best practices (PEP 8)
+
+**Result:** Commit succeeded after adding `__all__ = ["router"]` to `__init__.py`.
