@@ -72,6 +72,8 @@ class DetailsInfo(BaseModel):
 
 
 class SchoolApplicationCreate(BaseModel):
+    """Request body for POST /school-applications."""
+
     school: SchoolInfo
     location: LocationInfo
     contact: ContactInfo
