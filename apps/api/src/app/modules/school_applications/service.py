@@ -27,18 +27,22 @@ This module implements:
 
 Security considerations:
 - Tokens use cryptographically secure random generation (secrets.token_urlsafe)
+- Tokens are SHA-256 hashed before storage (database breach doesn't expose tokens)
 - Token expiration enforced at 72 hours
 - Email validation prevents unauthorized access to status
 - Duplicate detection prevents abuse
-- Rate limiting via Redis prevents email bombing
+- Rate limiting via Redis prevents email bombing (fail-closed if Redis unavailable)
 - Case-insensitive email comparison for robustness
+- No sensitive token data logged (prevents log exposure)
 """
 
+import hashlib
 import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.email import (
@@ -47,6 +51,12 @@ from app.core.email import (
     send_principal_confirmation,
 )
 from app.modules.school_applications import repository
+from app.modules.school_applications.helpers import (
+    get_effective_applicant_email_from_model,
+    get_effective_applicant_email_from_schema,
+    get_effective_applicant_name_from_model,
+    get_effective_applicant_name_from_schema,
+)
 from app.modules.school_applications.models import (
     ApplicationStatus,
     SchoolApplication,
@@ -68,6 +78,22 @@ logger = logging.getLogger(__name__)
 # Constants
 TOKEN_EXPIRY_HOURS = 72
 TOKEN_LENGTH = 32  # 256 bits of entropy when using token_urlsafe
+
+
+def _hash_token(token: str) -> str:
+    """
+    Hash a token for secure storage using SHA-256.
+
+    Tokens are hashed before storage so that even if the database is
+    compromised, the plain tokens cannot be recovered and used.
+
+    Args:
+        token: The plain text token to hash
+
+    Returns:
+        Hex-encoded SHA-256 hash of the token
+    """
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 class ApplicationServiceError(Exception):
@@ -215,42 +241,6 @@ def _calculate_token_expiry() -> datetime:
     return datetime.now(UTC) + timedelta(hours=TOKEN_EXPIRY_HOURS)
 
 
-def _get_effective_applicant_email(data: SchoolApplicationCreate) -> str:
-    """
-    Get the effective applicant email based on is_principal flag.
-
-    If the applicant is the principal, use the principal's email.
-    Otherwise, use the applicant's email.
-
-    Args:
-        data: The application create request data
-
-    Returns:
-        The email address to use for the applicant
-    """
-    if data.applicant.is_principal:
-        return data.contact.principal_email
-    return data.applicant.email  # type: ignore - validated in schema
-
-
-def _get_effective_applicant_name(data: SchoolApplicationCreate) -> str:
-    """
-    Get the effective applicant name based on is_principal flag.
-
-    If the applicant is the principal, use the principal's name.
-    Otherwise, use the applicant's name.
-
-    Args:
-        data: The application create request data
-
-    Returns:
-        The name to use for the applicant
-    """
-    if data.applicant.is_principal:
-        return data.contact.principal_name
-    return data.applicant.name  # type: ignore - validated in schema
-
-
 async def _check_duplicate_by_applicant_email(
     db: AsyncSession,
     applicant_email: str,
@@ -340,8 +330,8 @@ async def submit_application(
         HTTPException: If email sending fails (with warning, not blocking)
     """
     # Get effective applicant details
-    applicant_email = _get_effective_applicant_email(data)
-    applicant_name = _get_effective_applicant_name(data)
+    applicant_email = get_effective_applicant_email_from_schema(data)
+    applicant_name = get_effective_applicant_name_from_schema(data)
     school_name = data.school.name
 
     logger.info(f"Processing application submission for school: {school_name}")
@@ -360,11 +350,12 @@ async def submit_application(
     token = _generate_secure_token()
     token_expiry = _calculate_token_expiry()
 
-    # Store the verification token
+    # Store the verification token (hashed for security)
+    # Plain token is sent via email, hashed version stored in DB
     await repository.create_token(
         db=db,
         application_id=application.id,
-        token=token,
+        token=_hash_token(token),  # Store hash, not plain token
         token_type=TokenType.APPLICANT_VERIFICATION,
         expires_at=token_expiry,
     )
@@ -516,11 +507,15 @@ async def _validate_token(
         TokenAlreadyUsedError: If token was already used
         ApplicationNotFoundError: If associated application not found
     """
-    # Get the token
-    verification_token = await repository.get_by_token(db, token_string)
+    # Hash the incoming token to match stored hash
+    token_hash = _hash_token(token_string)
+
+    # Get the token by its hash
+    verification_token = await repository.get_by_token(db, token_hash)
 
     if not verification_token:
-        logger.warning(f"Token not found: {token_string[:10]}...")
+        # Don't log token content - security best practice
+        logger.warning("Token validation failed: token not found in database")
         raise InvalidTokenError()
 
     # Verify token type
@@ -532,12 +527,12 @@ async def _validate_token(
 
     # Check if already used
     if verification_token.used_at is not None:
-        logger.warning(f"Token already used: {token_string[:10]}...")
+        logger.warning("Token validation failed: token already used")
         raise TokenAlreadyUsedError()
 
     # Check if expired
     if datetime.now(UTC) > verification_token.expires_at:
-        logger.warning(f"Token expired: {token_string[:10]}...")
+        logger.warning("Token validation failed: token expired")
         raise TokenExpiredError()
 
     # Get the associated application
@@ -592,8 +587,8 @@ async def verify_applicant(
             expected_state=ApplicationStatus.AWAITING_APPLICANT_VERIFICATION.value,
         )
 
-    # Mark token as used
-    await repository.mark_token_used(db, token_string)
+    # Mark token as used (use hashed token for lookup)
+    await repository.mark_token_used(db, _hash_token(token_string))
     logger.info(f"Marked verification token as used for application {application.id}")
 
     # Update applicant_verified_at timestamp
@@ -644,10 +639,11 @@ async def verify_applicant(
         principal_token = _generate_secure_token()
         principal_token_expiry = _calculate_token_expiry()
 
+        # Store hashed token, send plain token via email
         await repository.create_token(
             db=db,
             application_id=application.id,
-            token=principal_token,
+            token=_hash_token(principal_token),  # Store hash, not plain token
             token_type=TokenType.PRINCIPAL_CONFIRMATION,
             expires_at=principal_token_expiry,
         )
@@ -723,8 +719,8 @@ async def confirm_principal(
             expected_state=ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION.value,
         )
 
-    # Mark token as used
-    await repository.mark_token_used(db, token_string)
+    # Mark token as used (use hashed token for lookup)
+    await repository.mark_token_used(db, _hash_token(token_string))
     logger.info(f"Marked principal confirmation token as used for application {application.id}")
 
     # Update status to pending_review
@@ -758,42 +754,6 @@ async def confirm_principal(
         message="Application confirmed. It is now under review by our team.",
         school_name=application.school_name,
     )
-
-
-def _get_effective_applicant_email_from_application(application: SchoolApplication) -> str:
-    """
-    Get the effective applicant email from an application record.
-
-    If the applicant is the principal, use the principal's email.
-    Otherwise, use the applicant's email.
-
-    Args:
-        application: The school application record
-
-    Returns:
-        The email address to use for the applicant
-    """
-    if application.applicant_is_principal:
-        return application.principal_email
-    return application.applicant_email or application.principal_email
-
-
-def _get_effective_applicant_name_from_application(application: SchoolApplication) -> str:
-    """
-    Get the effective applicant name from an application record.
-
-    If the applicant is the principal, use the principal's name.
-    Otherwise, use the applicant's name.
-
-    Args:
-        application: The school application record
-
-    Returns:
-        The name to use for the applicant
-    """
-    if application.applicant_is_principal:
-        return application.principal_name
-    return application.applicant_name or application.principal_name
 
 
 async def _check_rate_limit(
@@ -841,7 +801,7 @@ async def resend_verification(
     db: AsyncSession,
     application_id: UUID,
     email: str,
-    redis_client=None,
+    redis_client: Redis | None = None,
 ) -> ResendVerificationResponse:
     """
     Resend the verification email for an application.
@@ -849,7 +809,7 @@ async def resend_verification(
     This function:
     1. Validates the application exists and email matches
     2. Validates the application is still awaiting verification
-    3. Enforces rate limiting (max 3 requests per hour)
+    3. Enforces rate limiting (max 3 requests per hour) - REQUIRES Redis
     4. Deletes old token and creates a new one
     5. Sends new verification email
 
@@ -857,7 +817,7 @@ async def resend_verification(
         db: Database session
         application_id: UUID of the application
         email: Email address (must match applicant email)
-        redis_client: Optional Redis client for rate limiting
+        redis_client: Redis client for rate limiting (required in production)
 
     Returns:
         ResendVerificationResponse with new expiration time
@@ -867,6 +827,7 @@ async def resend_verification(
         InvalidEmailError: If email doesn't match
         AlreadyVerifiedError: If application is already verified
         RateLimitExceededError: If too many requests
+        ApplicationServiceError: If Redis unavailable (fail-closed security)
     """
     logger.info(f"Processing resend verification for application {application_id}")
 
@@ -878,7 +839,7 @@ async def resend_verification(
         raise ApplicationNotFoundError(application_id)
 
     # Get effective applicant email
-    effective_email = _get_effective_applicant_email_from_application(application)
+    effective_email = get_effective_applicant_email_from_model(application)
 
     # Validate email matches (case-insensitive comparison)
     if email.lower() != effective_email.lower():
@@ -901,15 +862,22 @@ async def resend_verification(
         )
         raise AlreadyVerifiedError()
 
-    # Check rate limit if Redis is available
-    if redis_client is not None:
-        await _check_rate_limit(redis_client, application_id)
+    # Check rate limit - fail closed if Redis unavailable (security)
+    # This prevents email bombing attacks during Redis outages
+    if redis_client is None:
+        logger.error("Redis unavailable for rate limiting - failing request (security)")
+        raise ApplicationServiceError(
+            message="Service temporarily unavailable. Please try again later.",
+            error_code="SERVICE_UNAVAILABLE",
+            status_code=503,
+        )
+    await _check_rate_limit(redis_client, application_id)
 
     # Determine token type based on current status
     if application.status == ApplicationStatus.AWAITING_APPLICANT_VERIFICATION:
         token_type = TokenType.APPLICANT_VERIFICATION
         recipient_email = effective_email
-        recipient_name = _get_effective_applicant_name_from_application(application)
+        recipient_name = get_effective_applicant_name_from_model(application)
     else:
         # AWAITING_PRINCIPAL_CONFIRMATION - resend to principal
         token_type = TokenType.PRINCIPAL_CONFIRMATION
@@ -924,10 +892,11 @@ async def resend_verification(
     new_token = _generate_secure_token()
     new_token_expiry = _calculate_token_expiry()
 
+    # Store hashed token, send plain token via email
     await repository.create_token(
         db=db,
         application_id=application_id,
-        token=new_token,
+        token=_hash_token(new_token),  # Store hash, not plain token
         token_type=token_type,
         expires_at=new_token_expiry,
     )
@@ -1124,7 +1093,7 @@ async def get_application_status(
         raise ApplicationNotFoundError(application_id)
 
     # Get effective applicant email
-    effective_email = _get_effective_applicant_email_from_application(application)
+    effective_email = get_effective_applicant_email_from_model(application)
 
     # Validate email matches (case-insensitive comparison for security)
     if email.lower() != effective_email.lower():

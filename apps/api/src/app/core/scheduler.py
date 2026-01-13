@@ -28,7 +28,7 @@ Usage:
 
 import logging
 from collections.abc import Callable, Coroutine
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED, JobExecutionEvent
@@ -82,7 +82,7 @@ def _job_listener(event: JobExecutionEvent) -> None:
             exc_info=event.exception,
         )
     else:
-        logger.info(f"Job {event.job_id} executed successfully at {datetime.utcnow().isoformat()}")
+        logger.info(f"Job {event.job_id} executed successfully at {datetime.now(UTC).isoformat()}")
 
 
 def get_scheduler() -> AsyncIOScheduler | None:
@@ -245,7 +245,7 @@ async def trigger_job_manually(job_id: str) -> dict[str, Any]:
         )
 
     func = _job_registry[job_id]
-    executed_at = datetime.utcnow()
+    executed_at = datetime.now(UTC)
 
     logger.info(f"Manually triggering job: {job_id}")
 

@@ -35,10 +35,15 @@ from app.core.email import (
 )
 from app.core.scheduler import register_job
 from app.modules.school_applications import repository
+from app.modules.school_applications.helpers import (
+    get_effective_applicant_email_from_model,
+    get_effective_applicant_name_from_model,
+)
 from app.modules.school_applications.models import (
     ApplicationStatus,
     SchoolApplication,
     TokenType,
+    VerificationToken,
 )
 
 logger = logging.getLogger(__name__)
@@ -51,30 +56,6 @@ HOURS_REMAINING_AT_REMINDER = EXPIRY_THRESHOLD_HOURS - REMINDER_THRESHOLD_HOURS 
 # Job IDs for registration and manual triggering
 JOB_ID_SEND_REMINDERS = "school_applications_send_reminders"
 JOB_ID_EXPIRE_APPLICATIONS = "school_applications_expire_applications"
-
-
-def _get_effective_applicant_email(application: SchoolApplication) -> str:
-    """
-    Get the effective applicant email from an application.
-
-    If the applicant is the principal, use the principal's email.
-    Otherwise, use the applicant's email.
-    """
-    if application.applicant_is_principal:
-        return application.principal_email
-    return application.applicant_email or application.principal_email
-
-
-def _get_effective_applicant_name(application: SchoolApplication) -> str:
-    """
-    Get the effective applicant name from an application.
-
-    If the applicant is the principal, use the principal's name.
-    Otherwise, use the applicant's name.
-    """
-    if application.applicant_is_principal:
-        return application.principal_name
-    return application.applicant_name or application.principal_name
 
 
 async def _process_applicant_verification_reminder(
@@ -109,8 +90,8 @@ async def _process_applicant_verification_reminder(
             }
 
         # Get applicant details
-        applicant_email = _get_effective_applicant_email(application)
-        applicant_name = _get_effective_applicant_name(application)
+        applicant_email = get_effective_applicant_email_from_model(application)
+        applicant_name = get_effective_applicant_name_from_model(application)
 
         # Send reminder email
         email_sent = await send_verification_reminder(
@@ -169,6 +150,50 @@ async def _process_principal_confirmation_reminder(
                 "reason": "no_valid_token",
             }
 
+        # Send reminder email to principal
+        email_sent = await send_verification_reminder(
+            to_email=application.principal_email,
+            applicant_name=application.principal_name,
+            school_name=application.school_name,
+            token=token.token,
+            hours_remaining=HOURS_REMAINING_AT_REMINDER,
+        )
+
+        if not email_sent:
+            logger.error(
+                f"Failed to send principal reminder email for application {application.id}"
+            )
+
+        # Mark reminder as sent
+        await repository.mark_reminder_sent(db, application.id)
+
+        logger.info(f"Processed principal confirmation reminder for application {application.id}")
+
+        return {
+            "application_id": str(application.id),
+            "status": "sent" if email_sent else "marked_sent_email_failed",
+            "principal_email": application.principal_email,
+        }
+
+
+async def _process_principal_confirmation_reminder_with_token(
+    application: SchoolApplication,
+    token: VerificationToken,
+) -> dict[str, Any]:
+    """
+    Process a single application needing principal confirmation reminder.
+
+    This version takes the token directly (already retrieved from the
+    token-based query) to avoid an extra database lookup.
+
+    Args:
+        application: The application to process
+        token: The principal confirmation token
+
+    Returns:
+        Dict with processing result
+    """
+    async with async_session_maker() as db:
         # Send reminder email to principal
         email_sent = await send_verification_reminder(
             to_email=application.principal_email,
@@ -264,20 +289,21 @@ async def send_verification_reminders() -> dict[str, Any]:
             results["total_errors"] += 1
 
     # Process principal confirmation reminders
+    # NOTE: Uses TOKEN creation time, not application submission time
+    # This ensures principals get a full 72-hour window from when their token was created
     async with async_session_maker() as db:
-        principal_applications = await repository.get_applications_needing_reminder(
+        principal_tokens = await repository.get_principal_tokens_needing_reminder(
             db,
-            submitted_before=reminder_threshold,
-            status=ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION,
+            created_before=reminder_threshold,
         )
 
     logger.info(
-        f"Found {len(principal_applications)} applications needing principal confirmation reminder"
+        f"Found {len(principal_tokens)} applications needing principal confirmation reminder"
     )
 
-    for application in principal_applications:
+    for application, token in principal_tokens:
         try:
-            result = await _process_principal_confirmation_reminder(application)
+            result = await _process_principal_confirmation_reminder_with_token(application, token)
             results["principal_reminders"].append(result)
             results["total_processed"] += 1
         except Exception as e:
@@ -319,8 +345,8 @@ async def _process_application_expiry(
         await repository.mark_application_expired(db, application.id)
 
         # Get applicant details for notification
-        applicant_email = _get_effective_applicant_email(application)
-        applicant_name = _get_effective_applicant_name(application)
+        applicant_email = get_effective_applicant_email_from_model(application)
+        applicant_name = get_effective_applicant_name_from_model(application)
 
         # Send expiration notification
         email_sent = await send_application_expired(
@@ -347,12 +373,12 @@ async def expire_unverified_applications() -> dict[str, Any]:
     """
     Expire applications that have not been verified within 72 hours.
 
-    This job finds all applications that:
-    1. Are awaiting applicant verification or principal confirmation
-    2. Were submitted more than 72 hours ago
+    This job handles two cases with different timing logic:
+    1. AWAITING_APPLICANT_VERIFICATION: Uses submission time (token created at submission)
+    2. AWAITING_PRINCIPAL_CONFIRMATION: Uses token creation time (principal gets fresh 72h)
 
-    These applications are marked as EXPIRED and notification emails
-    are sent to the applicants.
+    This ensures principals get a full 72-hour window from when their token was
+    created (after applicant verification), not from application submission.
 
     The job is idempotent - expired applications won't be selected
     again because their status changes.
@@ -360,45 +386,73 @@ async def expire_unverified_applications() -> dict[str, Any]:
     Returns:
         Dict with job execution summary including:
         - executed_at: When the job ran
-        - expired_applications: Results for each expired application
+        - applicant_expired: Applications expired for applicant verification timeout
+        - principal_expired: Applications expired for principal confirmation timeout
         - total_expired: Total applications expired
         - total_errors: Number of processing errors
     """
     executed_at = datetime.now(UTC)
     expiry_threshold = executed_at - timedelta(hours=EXPIRY_THRESHOLD_HOURS)
 
-    logger.info(
-        f"Starting application expiry job. "
-        f"Looking for applications submitted before {expiry_threshold.isoformat()}"
-    )
+    logger.info(f"Starting application expiry job. Threshold: {expiry_threshold.isoformat()}")
 
     results = {
         "executed_at": executed_at.isoformat(),
-        "expired_applications": [],
+        "applicant_expired": [],
+        "principal_expired": [],
         "total_expired": 0,
         "total_errors": 0,
     }
 
-    # Get applications to expire
+    # Part 1: Expire applicant verification timeouts (uses submitted_at)
     async with async_session_maker() as db:
-        applications_to_expire = await repository.get_applications_to_expire(
+        applicant_applications = await repository.get_expired_unverified(
             db,
-            submitted_before=expiry_threshold,
+            before_datetime=expiry_threshold,
         )
 
-    logger.info(f"Found {len(applications_to_expire)} applications to expire")
+    logger.info(f"Found {len(applicant_applications)} applicant verifications to expire")
 
-    for application in applications_to_expire:
+    for application in applicant_applications:
         try:
             result = await _process_application_expiry(application)
-            results["expired_applications"].append(result)
+            results["applicant_expired"].append(result)
             results["total_expired"] += 1
         except Exception as e:
             logger.error(
                 f"Error expiring application {application.id}: {e}",
                 exc_info=True,
             )
-            results["expired_applications"].append(
+            results["applicant_expired"].append(
+                {
+                    "application_id": str(application.id),
+                    "status": "error",
+                    "error": str(e),
+                }
+            )
+            results["total_errors"] += 1
+
+    # Part 2: Expire principal confirmation timeouts (uses token created_at)
+    # This ensures principals get a full 72 hours from when their token was created
+    async with async_session_maker() as db:
+        principal_tokens = await repository.get_principal_tokens_to_expire(
+            db,
+            created_before=expiry_threshold,
+        )
+
+    logger.info(f"Found {len(principal_tokens)} principal confirmations to expire")
+
+    for application, _token in principal_tokens:
+        try:
+            result = await _process_application_expiry(application)
+            results["principal_expired"].append(result)
+            results["total_expired"] += 1
+        except Exception as e:
+            logger.error(
+                f"Error expiring application {application.id}: {e}",
+                exc_info=True,
+            )
+            results["principal_expired"].append(
                 {
                     "application_id": str(application.id),
                     "status": "error",

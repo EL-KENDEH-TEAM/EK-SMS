@@ -116,16 +116,93 @@ async def get_pending_by_school_and_city(
     return result.scalar_one_or_none()
 
 
+# Valid status transitions - prevents invalid state changes
+# This state machine ensures applications follow the correct workflow
+VALID_STATUS_TRANSITIONS: dict[ApplicationStatus, set[ApplicationStatus]] = {
+    ApplicationStatus.AWAITING_APPLICANT_VERIFICATION: {
+        ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION,  # Applicant verified, need principal
+        ApplicationStatus.PENDING_REVIEW,  # Applicant verified AND is principal
+        ApplicationStatus.EXPIRED,  # Verification timed out
+    },
+    ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION: {
+        ApplicationStatus.PENDING_REVIEW,  # Principal confirmed
+        ApplicationStatus.EXPIRED,  # Confirmation timed out
+    },
+    ApplicationStatus.PENDING_REVIEW: {
+        ApplicationStatus.UNDER_REVIEW,  # Admin started reviewing
+        ApplicationStatus.APPROVED,  # Fast-track approval
+        ApplicationStatus.REJECTED,  # Fast-track rejection
+    },
+    ApplicationStatus.UNDER_REVIEW: {
+        ApplicationStatus.MORE_INFO_REQUESTED,  # Need more info
+        ApplicationStatus.APPROVED,  # Approved after review
+        ApplicationStatus.REJECTED,  # Rejected after review
+    },
+    ApplicationStatus.MORE_INFO_REQUESTED: {
+        ApplicationStatus.UNDER_REVIEW,  # Info provided, back to review
+        ApplicationStatus.EXPIRED,  # Timed out waiting for info
+        ApplicationStatus.REJECTED,  # Rejected for non-response
+    },
+    # Terminal states - no transitions allowed
+    ApplicationStatus.APPROVED: set(),
+    ApplicationStatus.REJECTED: set(),
+    ApplicationStatus.EXPIRED: set(),
+}
+
+
+class InvalidStatusTransitionError(ValueError):
+    """Raised when an invalid status transition is attempted."""
+
+    def __init__(
+        self,
+        current_status: ApplicationStatus,
+        new_status: ApplicationStatus,
+    ):
+        self.current_status = current_status
+        self.new_status = new_status
+        valid_transitions = VALID_STATUS_TRANSITIONS.get(current_status, set())
+        super().__init__(
+            f"Invalid status transition: {current_status.value} -> {new_status.value}. "
+            f"Valid transitions: {[s.value for s in valid_transitions]}"
+        )
+
+
 async def update_status(
     db: AsyncSession,
     id: UUID,
     status: ApplicationStatus,
     **kwargs,
 ) -> SchoolApplication:
-    """Update application status and optional fields."""
+    """
+    Update application status and optional fields.
+
+    Validates that the status transition is allowed by the state machine.
+    This prevents invalid transitions like jumping directly from
+    AWAITING_APPLICANT_VERIFICATION to APPROVED.
+
+    Args:
+        db: Database session
+        id: Application UUID
+        status: New status to set
+        **kwargs: Additional fields to update (e.g., applicant_verified_at)
+
+    Returns:
+        Updated SchoolApplication
+
+    Raises:
+        ValueError: If application not found
+        InvalidStatusTransitionError: If status transition is not allowed
+    """
     application = await get_by_id(db, id)
     if not application:
         raise ValueError(f"Application {id} not found")
+
+    # Validate status transition
+    current_status = application.status
+    valid_transitions = VALID_STATUS_TRANSITIONS.get(current_status, set())
+
+    if status != current_status and status not in valid_transitions:
+        raise InvalidStatusTransitionError(current_status, status)
 
     # Update status
     application.status = status
@@ -384,3 +461,93 @@ async def get_valid_token_for_application(
         )
     )
     return result.scalar_one_or_none()
+
+
+async def get_principal_tokens_needing_reminder(
+    db: AsyncSession,
+    created_before: datetime,
+) -> list[tuple[SchoolApplication, VerificationToken]]:
+    """
+    Get principal confirmation tokens that need a reminder email.
+
+    This method uses TOKEN creation time (not application submission time)
+    to correctly calculate when reminders should be sent for principal
+    confirmation. The principal gets a fresh 72-hour window from when
+    their token was created (after applicant verification).
+
+    Finds tokens that:
+    1. Are PRINCIPAL_CONFIRMATION type
+    2. Were created before the given datetime (e.g., 48 hours ago)
+    3. Are not yet used or expired
+    4. Belong to applications that haven't received a reminder
+
+    Args:
+        db: Database session
+        created_before: Find tokens created before this time (e.g., 48 hours ago)
+
+    Returns:
+        List of (application, token) tuples needing reminders
+    """
+    now = datetime.now(UTC)
+
+    result = await db.execute(
+        select(SchoolApplication, VerificationToken)
+        .join(
+            VerificationToken,
+            SchoolApplication.id == VerificationToken.application_id,
+        )
+        .where(
+            and_(
+                SchoolApplication.status == ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION,
+                SchoolApplication.reminder_sent_at.is_(None),
+                VerificationToken.token_type == TokenType.PRINCIPAL_CONFIRMATION,
+                VerificationToken.created_at < created_before,
+                VerificationToken.used_at.is_(None),
+                VerificationToken.expires_at > now,
+            )
+        )
+    )
+    # Convert Row objects to proper tuples
+    return [(row[0], row[1]) for row in result.all()]
+
+
+async def get_principal_tokens_to_expire(
+    db: AsyncSession,
+    created_before: datetime,
+) -> list[tuple[SchoolApplication, VerificationToken]]:
+    """
+    Get applications with principal tokens that should be expired.
+
+    This method uses TOKEN creation time (not application submission time)
+    to correctly calculate when applications should expire. The principal
+    gets a full 72-hour window from when their token was created.
+
+    Finds applications where:
+    1. Status is AWAITING_PRINCIPAL_CONFIRMATION
+    2. Principal token was created more than 72 hours ago
+    3. Token has not been used
+
+    Args:
+        db: Database session
+        created_before: Find tokens created before this time (e.g., 72 hours ago)
+
+    Returns:
+        List of (application, token) tuples to expire
+    """
+    result = await db.execute(
+        select(SchoolApplication, VerificationToken)
+        .join(
+            VerificationToken,
+            SchoolApplication.id == VerificationToken.application_id,
+        )
+        .where(
+            and_(
+                SchoolApplication.status == ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION,
+                VerificationToken.token_type == TokenType.PRINCIPAL_CONFIRMATION,
+                VerificationToken.created_at < created_before,
+                VerificationToken.used_at.is_(None),
+            )
+        )
+    )
+    # Convert Row objects to proper tuples
+    return [(row[0], row[1]) for row in result.all()]
