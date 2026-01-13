@@ -4,18 +4,34 @@ School Applications Service Layer
 Business logic for school registration applications.
 Orchestrates repository operations, token management, and email notifications.
 
-This module implements the submission flow:
-1. Validate no duplicate applications exist
-2. Create the application record
-3. Generate and store verification token
-4. Send verification email to applicant
-5. Return application details
+This module implements:
+1. Application Submission Flow:
+   - Validate no duplicate applications exist
+   - Create the application record
+   - Generate and store verification token
+   - Send verification email to applicant
+
+2. Verification Flow:
+   - Verify applicant email tokens
+   - Handle principal confirmation when applicant != principal
+   - Transition applications through verification states
+
+3. Resend Verification:
+   - Rate-limited resend of verification emails (3/hour via Redis)
+   - Deletes old tokens and creates new ones
+   - Works for both applicant and principal verification
+
+4. Status Checking:
+   - Secure status retrieval with email validation
+   - Progress step tracking through verification journey
 
 Security considerations:
-- Tokens use cryptographically secure random generation
+- Tokens use cryptographically secure random generation (secrets.token_urlsafe)
 - Token expiration enforced at 72 hours
-- Email validation prevents unauthorized access
+- Email validation prevents unauthorized access to status
 - Duplicate detection prevents abuse
+- Rate limiting via Redis prevents email bombing
+- Case-insensitive email comparison for robustness
 """
 
 import logging
@@ -38,9 +54,12 @@ from app.modules.school_applications.models import (
     VerificationToken,
 )
 from app.modules.school_applications.schemas import (
+    ApplicationStatusResponse,
     ConfirmPrincipalResponse,
+    ResendVerificationResponse,
     SchoolApplicationCreate,
     SchoolApplicationResponse,
+    StatusStep,
     VerifyApplicationResponse,
 )
 
@@ -738,4 +757,395 @@ async def confirm_principal(
         status=ApplicationStatus.PENDING_REVIEW,
         message="Application confirmed. It is now under review by our team.",
         school_name=application.school_name,
+    )
+
+
+def _get_effective_applicant_email_from_application(application: SchoolApplication) -> str:
+    """
+    Get the effective applicant email from an application record.
+
+    If the applicant is the principal, use the principal's email.
+    Otherwise, use the applicant's email.
+
+    Args:
+        application: The school application record
+
+    Returns:
+        The email address to use for the applicant
+    """
+    if application.applicant_is_principal:
+        return application.principal_email
+    return application.applicant_email or application.principal_email
+
+
+def _get_effective_applicant_name_from_application(application: SchoolApplication) -> str:
+    """
+    Get the effective applicant name from an application record.
+
+    If the applicant is the principal, use the principal's name.
+    Otherwise, use the applicant's name.
+
+    Args:
+        application: The school application record
+
+    Returns:
+        The name to use for the applicant
+    """
+    if application.applicant_is_principal:
+        return application.principal_name
+    return application.applicant_name or application.principal_name
+
+
+async def _check_rate_limit(
+    redis_client,
+    application_id: UUID,
+) -> None:
+    """
+    Check and enforce rate limiting for resend verification requests.
+
+    Uses a sliding window counter pattern in Redis:
+    - Key: resend_verification:{application_id}
+    - Value: Count of requests in the current window
+    - TTL: 1 hour (3600 seconds)
+
+    Args:
+        redis_client: Redis client instance
+        application_id: UUID of the application
+
+    Raises:
+        RateLimitExceededError: If rate limit is exceeded
+    """
+    rate_limit_key = f"resend_verification:{application_id}"
+
+    # Get current count
+    current_count = await redis_client.get(rate_limit_key)
+
+    if current_count is not None and int(current_count) >= RESEND_RATE_LIMIT_MAX_REQUESTS:
+        # Get TTL to determine retry-after
+        ttl = await redis_client.ttl(rate_limit_key)
+        retry_after = max(ttl, 60)  # At least 60 seconds
+        logger.warning(
+            f"Rate limit exceeded for application {application_id}: "
+            f"{current_count} requests in window"
+        )
+        raise RateLimitExceededError(retry_after_seconds=retry_after)
+
+    # Increment counter with expiry
+    pipe = redis_client.pipeline()
+    pipe.incr(rate_limit_key)
+    pipe.expire(rate_limit_key, RESEND_RATE_LIMIT_WINDOW_SECONDS)
+    await pipe.execute()
+
+
+async def resend_verification(
+    db: AsyncSession,
+    application_id: UUID,
+    email: str,
+    redis_client=None,
+) -> ResendVerificationResponse:
+    """
+    Resend the verification email for an application.
+
+    This function:
+    1. Validates the application exists and email matches
+    2. Validates the application is still awaiting verification
+    3. Enforces rate limiting (max 3 requests per hour)
+    4. Deletes old token and creates a new one
+    5. Sends new verification email
+
+    Args:
+        db: Database session
+        application_id: UUID of the application
+        email: Email address (must match applicant email)
+        redis_client: Optional Redis client for rate limiting
+
+    Returns:
+        ResendVerificationResponse with new expiration time
+
+    Raises:
+        ApplicationNotFoundError: If application doesn't exist
+        InvalidEmailError: If email doesn't match
+        AlreadyVerifiedError: If application is already verified
+        RateLimitExceededError: If too many requests
+    """
+    logger.info(f"Processing resend verification for application {application_id}")
+
+    # Get the application
+    application = await repository.get_by_id(db, application_id)
+
+    if not application:
+        logger.warning(f"Application not found for resend: {application_id}")
+        raise ApplicationNotFoundError(application_id)
+
+    # Get effective applicant email
+    effective_email = _get_effective_applicant_email_from_application(application)
+
+    # Validate email matches (case-insensitive comparison)
+    if email.lower() != effective_email.lower():
+        logger.warning(
+            f"Email mismatch for application {application_id}: "
+            f"provided={email}, expected={effective_email}"
+        )
+        raise InvalidEmailError()
+
+    # Check application status - can only resend for awaiting verification states
+    valid_resend_statuses = {
+        ApplicationStatus.AWAITING_APPLICANT_VERIFICATION,
+        ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION,
+    }
+
+    if application.status not in valid_resend_statuses:
+        logger.warning(
+            f"Cannot resend verification for application {application_id}: "
+            f"status={application.status}"
+        )
+        raise AlreadyVerifiedError()
+
+    # Check rate limit if Redis is available
+    if redis_client is not None:
+        await _check_rate_limit(redis_client, application_id)
+
+    # Determine token type based on current status
+    if application.status == ApplicationStatus.AWAITING_APPLICANT_VERIFICATION:
+        token_type = TokenType.APPLICANT_VERIFICATION
+        recipient_email = effective_email
+        recipient_name = _get_effective_applicant_name_from_application(application)
+    else:
+        # AWAITING_PRINCIPAL_CONFIRMATION - resend to principal
+        token_type = TokenType.PRINCIPAL_CONFIRMATION
+        recipient_email = application.principal_email
+        recipient_name = application.principal_name
+
+    # Delete existing tokens of this type for the application
+    await repository.delete_tokens_for_application(db, application_id, token_type)
+    logger.info(f"Deleted existing {token_type} tokens for application {application_id}")
+
+    # Generate new token
+    new_token = _generate_secure_token()
+    new_token_expiry = _calculate_token_expiry()
+
+    await repository.create_token(
+        db=db,
+        application_id=application_id,
+        token=new_token,
+        token_type=token_type,
+        expires_at=new_token_expiry,
+    )
+    logger.info(f"Created new {token_type} token for application {application_id}")
+
+    # Send appropriate email based on token type
+    try:
+        if token_type == TokenType.APPLICANT_VERIFICATION:
+            await send_applicant_verification(
+                to_email=recipient_email,
+                applicant_name=recipient_name,
+                school_name=application.school_name,
+                token=new_token,
+            )
+        else:
+            # For principal confirmation, we need the full context
+            from app.modules.school_applications.models import AdminChoice
+
+            designated_admin = (
+                application.principal_name
+                if application.admin_choice == AdminChoice.PRINCIPAL
+                else application.applicant_name or application.principal_name
+            )
+
+            await send_principal_confirmation(
+                to_email=recipient_email,
+                principal_name=recipient_name,
+                school_name=application.school_name,
+                applicant_name=application.applicant_name or "Staff",
+                applicant_role=application.applicant_role or "Staff",
+                city=application.city,
+                country=application.country_code,
+                designated_admin=designated_admin,
+                token=new_token,
+            )
+
+        logger.info(f"Resent verification email for application {application_id}")
+    except Exception as e:
+        logger.error(f"Failed to resend verification email: {e}")
+        # Still return success - token was created
+
+    return ResendVerificationResponse(
+        message="Verification email resent successfully.",
+        expires_at=new_token_expiry,
+    )
+
+
+# Status label and description mappings
+STATUS_LABELS: dict[ApplicationStatus, str] = {
+    ApplicationStatus.AWAITING_APPLICANT_VERIFICATION: "Awaiting Email Verification",
+    ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION: "Awaiting Principal Confirmation",
+    ApplicationStatus.PENDING_REVIEW: "Pending Review",
+    ApplicationStatus.UNDER_REVIEW: "Under Review",
+    ApplicationStatus.MORE_INFO_REQUESTED: "More Information Requested",
+    ApplicationStatus.APPROVED: "Approved",
+    ApplicationStatus.REJECTED: "Rejected",
+    ApplicationStatus.EXPIRED: "Expired",
+}
+
+STATUS_DESCRIPTIONS: dict[ApplicationStatus, str] = {
+    ApplicationStatus.AWAITING_APPLICANT_VERIFICATION: (
+        "Please check your email and click the verification link to continue."
+    ),
+    ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION: (
+        "Your email has been verified. Waiting for the principal to confirm the application."
+    ),
+    ApplicationStatus.PENDING_REVIEW: (
+        "Your application is in our review queue. We'll review it within 2-3 business days."
+    ),
+    ApplicationStatus.UNDER_REVIEW: ("Our team is currently reviewing your application."),
+    ApplicationStatus.MORE_INFO_REQUESTED: (
+        "We need additional information. Please check your email for details."
+    ),
+    ApplicationStatus.APPROVED: (
+        "Congratulations! Your application has been approved. Check your email for login details."
+    ),
+    ApplicationStatus.REJECTED: (
+        "Unfortunately, your application was not approved. You may reapply after 30 days."
+    ),
+    ApplicationStatus.EXPIRED: (
+        "Your application has expired. Please submit a new application to continue."
+    ),
+}
+
+
+def _build_status_steps(application: SchoolApplication) -> list[StatusStep]:
+    """
+    Build the progress steps for an application status response.
+
+    The steps show the application's journey through the verification process:
+    1. Application Submitted - always completed
+    2. Email Verified - based on applicant_verified_at
+    3. Principal Confirmed - based on principal_confirmed_at (skipped if applicant is principal)
+    4. Under Review - based on status being past pending_review
+    5. Decision - based on final status (approved/rejected)
+
+    Args:
+        application: The school application record
+
+    Returns:
+        List of StatusStep objects representing the progress
+    """
+    steps: list[StatusStep] = []
+
+    # Step 1: Application Submitted (always completed)
+    steps.append(
+        StatusStep(
+            name="Application Submitted",
+            completed=True,
+            completed_at=application.submitted_at,
+        )
+    )
+
+    # Step 2: Email Verified
+    steps.append(
+        StatusStep(
+            name="Email Verified",
+            completed=application.applicant_verified_at is not None,
+            completed_at=application.applicant_verified_at,
+        )
+    )
+
+    # Step 3: Principal Confirmed (only if applicant is not the principal)
+    if not application.applicant_is_principal:
+        steps.append(
+            StatusStep(
+                name="Principal Confirmed",
+                completed=application.principal_confirmed_at is not None,
+                completed_at=application.principal_confirmed_at,
+            )
+        )
+
+    # Step 4: Under Review
+    review_statuses = {
+        ApplicationStatus.UNDER_REVIEW,
+        ApplicationStatus.MORE_INFO_REQUESTED,
+        ApplicationStatus.APPROVED,
+        ApplicationStatus.REJECTED,
+    }
+    under_review_completed = application.status in review_statuses
+    steps.append(
+        StatusStep(
+            name="Under Review",
+            completed=under_review_completed,
+            completed_at=application.reviewed_at if under_review_completed else None,
+        )
+    )
+
+    # Step 5: Decision
+    decision_statuses = {ApplicationStatus.APPROVED, ApplicationStatus.REJECTED}
+    decision_completed = application.status in decision_statuses
+    steps.append(
+        StatusStep(
+            name="Decision",
+            completed=decision_completed,
+            completed_at=application.reviewed_at if decision_completed else None,
+        )
+    )
+
+    return steps
+
+
+async def get_application_status(
+    db: AsyncSession,
+    application_id: UUID,
+    email: str,
+) -> ApplicationStatusResponse:
+    """
+    Get the current status of an application.
+
+    This provides a user-friendly status view including progress steps.
+    The email is required for security - only the applicant should be able
+    to view the application status.
+
+    Args:
+        db: Database session
+        application_id: UUID of the application
+        email: Email address (must match applicant email for security)
+
+    Returns:
+        ApplicationStatusResponse with detailed status information
+
+    Raises:
+        ApplicationNotFoundError: If application doesn't exist
+        InvalidEmailError: If email doesn't match (prevents unauthorized access)
+    """
+    logger.info(f"Getting status for application {application_id}")
+
+    # Get the application
+    application = await repository.get_by_id(db, application_id)
+
+    if not application:
+        logger.warning(f"Application not found for status check: {application_id}")
+        raise ApplicationNotFoundError(application_id)
+
+    # Get effective applicant email
+    effective_email = _get_effective_applicant_email_from_application(application)
+
+    # Validate email matches (case-insensitive comparison for security)
+    if email.lower() != effective_email.lower():
+        logger.warning(
+            f"Unauthorized status check attempt for application {application_id}: "
+            f"provided email does not match"
+        )
+        raise InvalidEmailError()
+
+    # Build response
+    return ApplicationStatusResponse(
+        id=application.id,
+        school_name=application.school_name,
+        status=application.status,
+        status_label=STATUS_LABELS.get(application.status, str(application.status.value)),
+        status_description=STATUS_DESCRIPTIONS.get(
+            application.status,
+            "Please contact support for more information.",
+        ),
+        submitted_at=application.submitted_at,
+        applicant_verified_at=application.applicant_verified_at,
+        principal_confirmed_at=application.principal_confirmed_at,
+        steps=_build_status_steps(application),
     )

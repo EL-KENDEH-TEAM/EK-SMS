@@ -9,37 +9,50 @@ Endpoints:
 - POST /school-applications - Submit a new registration application
 - POST /school-applications/verify-applicant - Verify applicant email
 - POST /school-applications/confirm-principal - Principal confirms application
+- POST /school-applications/resend-verification - Resend verification email
+- GET /school-applications/{id}/status - Get application status
 - GET /school-applications/countries - List supported countries
 
 Security:
-- Rate limiting should be applied at infrastructure level
+- Rate limiting applied via Redis for resend-verification endpoint
+- Email validation prevents unauthorized status access
 - Input validation via Pydantic schemas
 - XSS prevention in email templates
 - CSRF protection not needed (stateless API)
 """
 
 import logging
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.redis import get_redis
 from app.modules.school_applications import service
 from app.modules.school_applications.schemas import (
+    ApplicationStatusResponse,
     ConfirmPrincipalRequest,
     ConfirmPrincipalResponse,
     Country,
     CountryListResponse,
+    ResendVerificationRequest,
+    ResendVerificationResponse,
     SchoolApplicationCreate,
     SchoolApplicationResponse,
     VerifyApplicationRequest,
     VerifyApplicationResponse,
 )
 from app.modules.school_applications.service import (
+    AlreadyVerifiedError,
+    ApplicationNotFoundError,
     ApplicationServiceError,
     DuplicateApplicationError,
     InvalidApplicationStateError,
+    InvalidEmailError,
     InvalidTokenError,
+    RateLimitExceededError,
     TokenAlreadyUsedError,
     TokenExpiredError,
 )
@@ -479,6 +492,287 @@ async def confirm_principal(
         raise
     except Exception as e:
         logger.exception(f"Unexpected error confirming principal: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred. Please try again later.",
+            },
+        ) from e
+
+
+@router.post(
+    "/resend-verification",
+    response_model=ResendVerificationResponse,
+    summary="Resend Verification Email",
+    description="""
+Resend the verification email for an application.
+
+**Use Cases:**
+- Applicant didn't receive the original verification email
+- Verification link expired and applicant needs a new one
+- Email was sent to spam folder and user wants to try again
+
+**Security:**
+- Email must match the application's applicant email
+- Rate limited to 3 requests per hour per application
+- Only works for applications awaiting verification
+
+**Rate Limiting:**
+Returns 429 Too Many Requests if limit exceeded, with Retry-After header.
+""",
+    responses={
+        200: {
+            "description": "Verification email resent successfully",
+            "model": ResendVerificationResponse,
+        },
+        403: {
+            "description": "Email does not match application",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "INVALID_EMAIL",
+                        "message": "Email does not match the application",
+                    }
+                }
+            },
+        },
+        404: {
+            "description": "Application not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "APPLICATION_NOT_FOUND",
+                        "message": "Application not found",
+                    }
+                }
+            },
+        },
+        409: {
+            "description": "Application already verified",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "ALREADY_VERIFIED",
+                        "message": "This application has already been verified",
+                    }
+                }
+            },
+        },
+        429: {
+            "description": "Rate limit exceeded",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "RATE_LIMIT_EXCEEDED",
+                        "message": "Too many resend requests. Please try again in 45 minute(s).",
+                    }
+                }
+            },
+        },
+    },
+)
+async def resend_verification(
+    data: ResendVerificationRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+    redis: Redis = Depends(get_redis),
+) -> ResendVerificationResponse:
+    """
+    Resend verification email for an application.
+
+    Creates a new verification token, invalidates the old one, and sends
+    a fresh verification email.
+
+    Args:
+        data: Request containing application_id and email
+        response: FastAPI response object for headers
+        db: Database session (injected)
+        redis: Redis client for rate limiting (injected)
+
+    Returns:
+        Success message with new token expiration time
+    """
+    try:
+        result = await service.resend_verification(
+            db=db,
+            application_id=data.application_id,
+            email=data.email,
+            redis_client=redis,
+        )
+
+        logger.info(f"Resent verification for application {data.application_id}")
+
+        return result
+
+    except ApplicationNotFoundError as e:
+        logger.warning(f"Application not found for resend: {data.application_id}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except InvalidEmailError as e:
+        logger.warning(f"Invalid email for resend: {data.application_id}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except AlreadyVerifiedError as e:
+        logger.warning(f"Already verified for resend: {data.application_id}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except RateLimitExceededError as e:
+        logger.warning(f"Rate limit exceeded for resend: {data.application_id}")
+        response.headers["Retry-After"] = str(e.retry_after_seconds)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+            headers={"Retry-After": str(e.retry_after_seconds)},
+        ) from e
+    except ApplicationServiceError as e:
+        logger.error(f"Application service error: {e.message}")
+        raise HTTPException(
+            status_code=e.status_code,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Unexpected error resending verification: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred. Please try again later.",
+            },
+        ) from e
+
+
+@router.get(
+    "/{application_id}/status",
+    response_model=ApplicationStatusResponse,
+    summary="Get Application Status",
+    description="""
+Get the current status of a school registration application.
+
+**Security:**
+The email query parameter is required and must match the applicant's email.
+This prevents unauthorized access to application status.
+
+**Response:**
+Returns detailed status information including:
+- Current status and human-readable label
+- Description of what to expect next
+- Progress steps showing verification journey
+- Timestamps for completed steps
+""",
+    responses={
+        200: {
+            "description": "Application status retrieved successfully",
+            "model": ApplicationStatusResponse,
+        },
+        403: {
+            "description": "Email does not match application",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "INVALID_EMAIL",
+                        "message": "Email does not match the application",
+                    }
+                }
+            },
+        },
+        404: {
+            "description": "Application not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "APPLICATION_NOT_FOUND",
+                        "message": "Application not found",
+                    }
+                }
+            },
+        },
+    },
+)
+async def get_application_status(
+    application_id: UUID,
+    email: str,
+    db: AsyncSession = Depends(get_db),
+) -> ApplicationStatusResponse:
+    """
+    Get the current status of an application.
+
+    Provides a detailed view of the application status including
+    progress steps and what to expect next.
+
+    Args:
+        application_id: UUID of the application
+        email: Email address (must match applicant email for security)
+        db: Database session (injected)
+
+    Returns:
+        Detailed application status with progress steps
+    """
+    try:
+        result = await service.get_application_status(
+            db=db,
+            application_id=application_id,
+            email=email,
+        )
+
+        logger.info(f"Retrieved status for application {application_id}")
+
+        return result
+
+    except ApplicationNotFoundError as e:
+        logger.warning(f"Application not found for status: {application_id}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except InvalidEmailError as e:
+        logger.warning(f"Invalid email for status check: {application_id}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except ApplicationServiceError as e:
+        logger.error(f"Application service error: {e.message}")
+        raise HTTPException(
+            status_code=e.status_code,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Unexpected error getting application status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={

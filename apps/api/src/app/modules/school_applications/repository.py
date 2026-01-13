@@ -1,7 +1,21 @@
+"""
+School Applications Repository
+
+Database operations for school registration applications and verification tokens.
+All operations are async and follow the repository pattern for clean separation
+of concerns between data access and business logic.
+
+Design Principles:
+- All queries are parameterized (no SQL injection)
+- Async operations for non-blocking I/O
+- Single responsibility - only database operations, no business logic
+- Timezone-aware datetime handling (UTC)
+"""
+
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import ApplicationStatus, SchoolApplication, TokenType, VerificationToken
@@ -205,3 +219,168 @@ async def delete_tokens_for_application(
 
     await db.execute(stmt)
     await db.commit()
+
+
+# ============================================
+# Background Job Repository Methods
+# ============================================
+
+
+async def get_applications_needing_reminder(
+    db: AsyncSession,
+    submitted_before: datetime,
+    status: ApplicationStatus,
+) -> list[SchoolApplication]:
+    """
+    Get applications that need a reminder email.
+
+    Finds applications that:
+    1. Are in the specified status (awaiting verification or principal confirmation)
+    2. Were submitted before the given datetime (e.g., 48 hours ago)
+    3. Have NOT yet received a reminder (reminder_sent_at is NULL)
+
+    This query is idempotent - running it multiple times will return the same
+    results until applications are updated.
+
+    Args:
+        db: Database session
+        submitted_before: Find applications submitted before this time
+        status: The status to filter by (AWAITING_APPLICANT_VERIFICATION or
+                AWAITING_PRINCIPAL_CONFIRMATION)
+
+    Returns:
+        List of applications that need a reminder
+    """
+    result = await db.execute(
+        select(SchoolApplication).where(
+            and_(
+                SchoolApplication.status == status,
+                SchoolApplication.submitted_at < submitted_before,
+                SchoolApplication.reminder_sent_at.is_(None),
+            )
+        )
+    )
+    return list(result.scalars().all())
+
+
+async def get_applications_to_expire(
+    db: AsyncSession,
+    submitted_before: datetime,
+) -> list[SchoolApplication]:
+    """
+    Get applications that should be marked as expired.
+
+    Finds applications that:
+    1. Are still in AWAITING_APPLICANT_VERIFICATION or AWAITING_PRINCIPAL_CONFIRMATION status
+    2. Were submitted before the given datetime (e.g., 72 hours ago)
+
+    These applications have exceeded the verification window and should be expired.
+
+    Args:
+        db: Database session
+        submitted_before: Find applications submitted before this time (72 hours ago)
+
+    Returns:
+        List of applications that should be expired
+    """
+    expirable_statuses = [
+        ApplicationStatus.AWAITING_APPLICANT_VERIFICATION,
+        ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION,
+    ]
+
+    result = await db.execute(
+        select(SchoolApplication).where(
+            and_(
+                SchoolApplication.status.in_(expirable_statuses),
+                SchoolApplication.submitted_at < submitted_before,
+            )
+        )
+    )
+    return list(result.scalars().all())
+
+
+async def mark_reminder_sent(
+    db: AsyncSession,
+    application_id: UUID,
+    sent_at: datetime | None = None,
+) -> SchoolApplication | None:
+    """
+    Mark that a reminder has been sent for an application.
+
+    Updates the reminder_sent_at field to prevent duplicate reminders.
+    This is crucial for idempotency - the job can run multiple times
+    without sending multiple reminders.
+
+    Args:
+        db: Database session
+        application_id: UUID of the application
+        sent_at: When the reminder was sent (defaults to now)
+
+    Returns:
+        The updated application, or None if not found
+    """
+    application = await get_by_id(db, application_id)
+
+    if not application:
+        return None
+
+    application.reminder_sent_at = sent_at or datetime.now(UTC)
+
+    await db.commit()
+    await db.refresh(application)
+
+    return application
+
+
+async def mark_application_expired(
+    db: AsyncSession,
+    application_id: UUID,
+) -> SchoolApplication | None:
+    """
+    Mark an application as expired.
+
+    Updates the status to EXPIRED. This is a terminal state -
+    the applicant must submit a new application to continue.
+
+    Args:
+        db: Database session
+        application_id: UUID of the application
+
+    Returns:
+        The updated application, or None if not found
+    """
+    return await update_status(db, application_id, ApplicationStatus.EXPIRED)
+
+
+async def get_valid_token_for_application(
+    db: AsyncSession,
+    application_id: UUID,
+    token_type: TokenType,
+) -> VerificationToken | None:
+    """
+    Get a valid (unused, unexpired) token for an application.
+
+    Used by the reminder job to get the current token for inclusion
+    in reminder emails.
+
+    Args:
+        db: Database session
+        application_id: UUID of the application
+        token_type: Type of token to find
+
+    Returns:
+        The valid token, or None if not found or expired
+    """
+    now = datetime.now(UTC)
+
+    result = await db.execute(
+        select(VerificationToken).where(
+            and_(
+                VerificationToken.application_id == application_id,
+                VerificationToken.token_type == token_type,
+                VerificationToken.used_at.is_(None),
+                VerificationToken.expires_at > now,
+            )
+        )
+    )
+    return result.scalar_one_or_none()
