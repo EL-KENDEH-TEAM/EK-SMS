@@ -7,6 +7,8 @@ are used before any school or user account exists.
 
 Endpoints:
 - POST /school-applications - Submit a new registration application
+- POST /school-applications/verify-applicant - Verify applicant email
+- POST /school-applications/confirm-principal - Principal confirms application
 - GET /school-applications/countries - List supported countries
 
 Security:
@@ -24,14 +26,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.modules.school_applications import service
 from app.modules.school_applications.schemas import (
+    ConfirmPrincipalRequest,
+    ConfirmPrincipalResponse,
     Country,
     CountryListResponse,
     SchoolApplicationCreate,
     SchoolApplicationResponse,
+    VerifyApplicationRequest,
+    VerifyApplicationResponse,
 )
 from app.modules.school_applications.service import (
     ApplicationServiceError,
     DuplicateApplicationError,
+    InvalidApplicationStateError,
+    InvalidTokenError,
+    TokenAlreadyUsedError,
+    TokenExpiredError,
 )
 
 logger = logging.getLogger(__name__)
@@ -226,3 +236,253 @@ async def list_countries() -> CountryListResponse:
         List of Country objects with code and name
     """
     return CountryListResponse(countries=SUPPORTED_COUNTRIES)
+
+
+@router.post(
+    "/verify-applicant",
+    response_model=VerifyApplicationResponse,
+    summary="Verify Applicant Email",
+    description="""
+Verify the applicant's email using the token from the verification email.
+
+**Scenarios:**
+1. If applicant IS the principal: Application moves directly to review queue
+2. If applicant is NOT the principal: A confirmation email is sent to the principal
+
+**Token Requirements:**
+- Must be a valid, unused token
+- Must not be expired (72 hours from creation)
+- Must be of type APPLICANT_VERIFICATION
+""",
+    responses={
+        200: {
+            "description": "Email verified successfully",
+            "model": VerifyApplicationResponse,
+        },
+        400: {
+            "description": "Invalid or expired token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "TOKEN_EXPIRED",
+                        "message": "This verification link has expired. Please request a new one.",
+                    }
+                }
+            },
+        },
+        404: {
+            "description": "Application not found",
+        },
+        409: {
+            "description": "Already verified or token already used",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "TOKEN_ALREADY_USED",
+                        "message": "This verification link has already been used.",
+                    }
+                }
+            },
+        },
+    },
+)
+async def verify_applicant(
+    data: VerifyApplicationRequest,
+    db: AsyncSession = Depends(get_db),
+) -> VerifyApplicationResponse:
+    """
+    Verify applicant email address.
+
+    Uses the token from the verification email to confirm the applicant's email.
+    If the applicant is the principal, moves to review. Otherwise, sends
+    confirmation email to the principal.
+
+    Args:
+        data: Request containing the verification token
+        db: Database session (injected)
+
+    Returns:
+        Verification result with next steps
+    """
+    try:
+        response = await service.verify_applicant(
+            db=db,
+            token_string=data.token,
+            country_name_lookup=COUNTRY_CODE_TO_NAME,
+        )
+
+        logger.info(f"Applicant verified for application {response.id}")
+
+        return response
+
+    except (InvalidTokenError, TokenExpiredError) as e:
+        logger.warning(f"Token validation failed: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except TokenAlreadyUsedError as e:
+        logger.warning(f"Token already used: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except InvalidApplicationStateError as e:
+        logger.warning(f"Invalid application state: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except ApplicationServiceError as e:
+        logger.error(f"Application service error: {e.message}")
+        raise HTTPException(
+            status_code=e.status_code,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Unexpected error verifying applicant: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred. Please try again later.",
+            },
+        ) from e
+
+
+@router.post(
+    "/confirm-principal",
+    response_model=ConfirmPrincipalResponse,
+    summary="Principal Confirmation",
+    description="""
+Principal confirms the application using the token from their confirmation email.
+
+This endpoint is only called when the applicant is different from the principal.
+After confirmation, the application moves to the review queue.
+
+**Token Requirements:**
+- Must be a valid, unused token
+- Must not be expired (72 hours from creation)
+- Must be of type PRINCIPAL_CONFIRMATION
+- Application must be in AWAITING_PRINCIPAL_CONFIRMATION state
+""",
+    responses={
+        200: {
+            "description": "Application confirmed, moved to review queue",
+            "model": ConfirmPrincipalResponse,
+        },
+        400: {
+            "description": "Invalid or expired token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "TOKEN_EXPIRED",
+                        "message": "This verification link has expired. Please request a new one.",
+                    }
+                }
+            },
+        },
+        404: {
+            "description": "Application not found",
+        },
+        409: {
+            "description": "Already confirmed or application not in correct state",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "INVALID_APPLICATION_STATE",
+                        "message": "This application is not awaiting principal confirmation.",
+                    }
+                }
+            },
+        },
+    },
+)
+async def confirm_principal(
+    data: ConfirmPrincipalRequest,
+    db: AsyncSession = Depends(get_db),
+) -> ConfirmPrincipalResponse:
+    """
+    Principal confirms the application.
+
+    Uses the token from the confirmation email to confirm the application.
+    Moves the application to the review queue.
+
+    Args:
+        data: Request containing the confirmation token
+        db: Database session (injected)
+
+    Returns:
+        Confirmation result with application details
+    """
+    try:
+        response = await service.confirm_principal(
+            db=db,
+            token_string=data.token,
+        )
+
+        logger.info(f"Principal confirmed application {response.id}")
+
+        return response
+
+    except (InvalidTokenError, TokenExpiredError) as e:
+        logger.warning(f"Token validation failed: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except TokenAlreadyUsedError as e:
+        logger.warning(f"Token already used: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except InvalidApplicationStateError as e:
+        logger.warning(f"Invalid application state: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except ApplicationServiceError as e:
+        logger.error(f"Application service error: {e.message}")
+        raise HTTPException(
+            status_code=e.status_code,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Unexpected error confirming principal: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred. Please try again later.",
+            },
+        ) from e
