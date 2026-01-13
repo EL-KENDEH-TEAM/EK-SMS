@@ -112,15 +112,17 @@ class SchoolApplicationCreate(BaseModel):
 
 
 class SchoolApplicationResponse(BaseModel):
-    """Response after submitting a school application."""
+    """Response after submitting a school application.
+
+    Matches the API contract for POST /school-applications response.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     status: ApplicationStatus
-    school_name: str
-    submitted_at: datetime
-    message: str = "Application Submitted successfully. Please check your email to verify"
+    applicant_email: str
+    message: str = "Application submitted. Please check your email to verify."
     verification_expires_at: datetime
 
 

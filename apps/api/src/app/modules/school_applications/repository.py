@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import ApplicationStatus, SchoolApplication, TokenType, VerificationToken
@@ -57,9 +57,25 @@ async def get_by_id(db: AsyncSession, id: UUID) -> SchoolApplication | None:
 
 
 async def get_by_applicant_email(db: AsyncSession, email: str) -> list[SchoolApplication]:
-    """Get all applications by applicant email."""
+    """
+    Get all applications by the effective applicant email.
+
+    This checks both:
+    - applicant_email field (when applicant is NOT the principal)
+    - principal_email field (when applicant IS the principal)
+
+    This ensures duplicate detection works correctly regardless of who submitted.
+    """
     result = await db.execute(
-        select(SchoolApplication).where(SchoolApplication.applicant_email == email)
+        select(SchoolApplication).where(
+            or_(
+                # Case 1: Applicant is not principal, check applicant_email
+                SchoolApplication.applicant_email == email,
+                # Case 2: Applicant is principal, check principal_email
+                (SchoolApplication.applicant_is_principal == True)  # noqa: E712
+                & (SchoolApplication.principal_email == email),
+            )
+        )
     )
     return list(result.scalars().all())
 
