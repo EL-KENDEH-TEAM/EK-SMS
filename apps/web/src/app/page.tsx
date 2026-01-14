@@ -12,7 +12,13 @@ export default function HomePage() {
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900">EK-SMS</h1>
         <p className="mt-4 text-lg text-gray-600">EL-KENDEH Smart School Management System</p>
-        <div className="mt-8 flex gap-4 justify-center">
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+          <Link
+            href="/register"
+            className="rounded-md bg-green-600 px-6 py-3 text-white font-medium hover:bg-green-700"
+          >
+            Register Your School
+          </Link>
           <Link
             href="/login"
             className="rounded-md bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
