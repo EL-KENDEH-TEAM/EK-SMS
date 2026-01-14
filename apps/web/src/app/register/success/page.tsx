@@ -12,7 +12,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { resendVerification } from '@/lib/api/registration';
 
-export function RegistrationSuccessPage() {
+export default function RegistrationSuccessPage() {
     const searchParams = useSearchParams();
     const [email, setEmail] = useState('');
     const [applicationId, setApplicationId] = useState('');
@@ -167,5 +167,3 @@ export function RegistrationSuccessPage() {
         </div>
     );
 }
-
-export default RegistrationSuccessPage;

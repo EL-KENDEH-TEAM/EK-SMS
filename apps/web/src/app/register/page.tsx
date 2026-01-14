@@ -15,7 +15,7 @@ import { Step4AboutYou } from './components/Step4AboutYou';
 import { Step5Details } from './components/Step5Details';
 import { Step6Review } from './components/Step6Review';
 
-export function RegisterPage() {
+export default function RegisterPage() {
   const { currentStep } = useRegistration();
 
   // Render current step component
@@ -52,5 +52,3 @@ export function RegisterPage() {
     </div>
   );
 }
-
-export default RegisterPage;

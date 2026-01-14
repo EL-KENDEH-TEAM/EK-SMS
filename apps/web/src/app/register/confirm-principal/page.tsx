@@ -239,7 +239,7 @@ function PrincipalConfirmationContent() {
     );
 }
 
-export function PrincipalConfirmationPage() {
+export default function PrincipalConfirmationPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center">
@@ -250,5 +250,3 @@ export function PrincipalConfirmationPage() {
         </Suspense>
     );
 }
-
-export default PrincipalConfirmationPage;

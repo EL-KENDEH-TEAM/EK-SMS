@@ -14,7 +14,7 @@ import { verifyApplicant } from '@/lib/api/registration';
 
 type VerificationState = 'loading' | 'success' | 'error' | 'needs-principal';
 
-export function EmailVerificationPage() {
+export default function EmailVerificationPage() {
     const searchParams = useSearchParams();
     const [state, setState] = useState<VerificationState>('loading');
     const [message, setMessage] = useState('');
@@ -209,5 +209,3 @@ export function EmailVerificationPage() {
         </div>
     );
 }
-
-export default EmailVerificationPage;
