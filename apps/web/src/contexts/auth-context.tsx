@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null);
           }
         }
-      } catch (err) {
+      } catch {
         if (isMounted) setUser(null);
       }
     };

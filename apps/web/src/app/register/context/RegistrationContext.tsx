@@ -13,7 +13,7 @@ import { initialFormData } from '../types/registration';
 interface RegistrationContextType {
     formData: RegistrationFormData;
     currentStep: FormStep;
-    updateFormData: (step: keyof RegistrationFormData, data: any) => void;
+    updateFormData: <K extends keyof RegistrationFormData>(step: K, data: Partial<RegistrationFormData[K]>) => void;
     nextStep: () => void;
     previousStep: () => void;
     goToStep: (step: FormStep) => void;
@@ -26,7 +26,7 @@ export function RegistrationProvider({ children }: { children: ReactNode }) {
     const [formData, setFormData] = useState<RegistrationFormData>(initialFormData);
     const [currentStep, setCurrentStep] = useState<FormStep>(1);
 
-    const updateFormData = (step: keyof RegistrationFormData, data: any) => {
+    const updateFormData = <K extends keyof RegistrationFormData>(step: K, data: Partial<RegistrationFormData[K]>) => {
         setFormData(prev => ({
             ...prev,
             [step]: { ...prev[step], ...data }
