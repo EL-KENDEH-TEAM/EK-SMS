@@ -2,7 +2,7 @@
 
 /**
  * Step 5: Final Details Form
- * 
+ *
  * Online presence (optional) + Why EK-SMS (required)
  */
 

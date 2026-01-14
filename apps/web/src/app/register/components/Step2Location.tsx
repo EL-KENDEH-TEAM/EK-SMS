@@ -2,7 +2,7 @@
 
 /**
  * Step 2: Location Form
- * 
+ *
  * Collects: Country (from API), City/Town, Physical Address
  */
 

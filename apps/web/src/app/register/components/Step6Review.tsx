@@ -2,7 +2,7 @@
 
 /**
  * Step 6: Review & Submit
- * 
+ *
  * Displays all form data for review before submission
  */
 

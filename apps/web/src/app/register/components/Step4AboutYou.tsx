@@ -2,7 +2,7 @@
 
 /**
  * Step 4: About You Form
- * 
+ *
  * Applicant information with conditional fields
  */
 
