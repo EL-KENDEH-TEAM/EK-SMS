@@ -11,11 +11,21 @@ import { useRegistration } from '../context/RegistrationContext';
 import { getCountries } from '@/lib/api/registration';
 import type { LocationData, FormErrors } from '../types/registration';
 
+// Fallback countries for West Africa region (defined outside component to avoid dependency issues)
+const FALLBACK_COUNTRIES = [
+    { code: 'SL', name: 'Sierra Leone' },
+    { code: 'LR', name: 'Liberia' },
+    { code: 'GH', name: 'Ghana' },
+    { code: 'NG', name: 'Nigeria' },
+    { code: 'GN', name: 'Guinea' },
+];
+
 export function Step2Location() {
     const { formData, updateFormData, nextStep, previousStep } = useRegistration();
     const [errors, setErrors] = useState<FormErrors>({});
     const [countries, setCountries] = useState<Array<{ code: string; name: string }>>([]);
     const [isLoadingCountries, setIsLoadingCountries] = useState(true);
+    const [usingFallbackCountries, setUsingFallbackCountries] = useState(false);
 
     const currentData = formData.location;
 
@@ -24,20 +34,14 @@ export function Step2Location() {
         const fetchCountries = async () => {
             try {
                 setIsLoadingCountries(true);
+                setUsingFallbackCountries(false);
                 const data = await getCountries();
                 setCountries(data);
             } catch (error) {
                 console.error('Failed to load countries:', error);
-                setErrors(prev => ({ ...prev, country: 'Failed to load countries' }));
-
-                // Fallback to mock data if API fails
-                setCountries([
-                    { code: 'SL', name: 'Sierra Leone' },
-                    { code: 'LR', name: 'Liberia' },
-                    { code: 'GH', name: 'Ghana' },
-                    { code: 'NG', name: 'Nigeria' },
-                    { code: 'GN', name: 'Guinea' },
-                ]);
+                // Use fallback data and show warning (not error)
+                setCountries(FALLBACK_COUNTRIES);
+                setUsingFallbackCountries(true);
             } finally {
                 setIsLoadingCountries(false);
             }
@@ -87,13 +91,22 @@ export function Step2Location() {
                 <p className="text-[#4b5563] mt-2">Where is your school located?</p>
             </div>
 
+            {/* Fallback Warning */}
+            {usingFallbackCountries && (
+                <div className="bg-[#f59e0b]/10 border border-[#f59e0b] rounded-lg p-3" role="alert">
+                    <p className="text-[#92400e] text-sm">
+                        Unable to load full country list. Showing West Africa region only.
+                    </p>
+                </div>
+            )}
+
             {/* Country Dropdown */}
             <div>
                 <label htmlFor="country" className="block text-sm font-medium text-[#1f2937] mb-2">
                     Country <span className="text-[#dc2626]">*</span>
                 </label>
                 {isLoadingCountries ? (
-                    <div className="w-full px-4 py-3 rounded-lg border border-[#d1d5db] text-[#6b7280]">
+                    <div className="w-full px-4 py-3 rounded-lg border border-[#d1d5db] text-[#6b7280]" aria-busy="true">
                         Loading countries...
                     </div>
                 ) : (
@@ -101,6 +114,9 @@ export function Step2Location() {
                         id="country"
                         value={currentData.country}
                         onChange={(e) => handleChange('country', e.target.value)}
+                        aria-required="true"
+                        aria-invalid={!!errors.country}
+                        aria-describedby={errors.country ? 'country-error' : undefined}
                         className={`w-full px-4 py-3 rounded-lg border ${errors.country ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
                     >
                         <option value="">Select a country</option>
@@ -111,7 +127,7 @@ export function Step2Location() {
                         ))}
                     </select>
                 )}
-                {errors.country && <p className="text-[#dc2626] text-sm mt-1">{errors.country}</p>}
+                {errors.country && <p id="country-error" className="text-[#dc2626] text-sm mt-1" role="alert">{errors.country}</p>}
             </div>
 
             {/* City/Town */}

@@ -1,6 +1,6 @@
 /**
  * Registration API Client
- * 
+ *
  * API functions for school registration flow
  */
 
@@ -15,67 +15,102 @@ import type {
     Country
 } from '@/app/register/types/registration';
 
+// API URL configuration
+// In production, NEXT_PUBLIC_API_URL should be set via environment variables
+// Falls back to localhost for development
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002') + '/api/v1';
 
 /**
+ * Sanitize string input - trim whitespace
+ */
+function sanitizeString(value: string | undefined | null): string | null {
+    if (!value) return null;
+    const trimmed = value.trim();
+    return trimmed || null;
+}
+
+/**
+ * Sanitize and lowercase email
+ */
+function sanitizeEmail(email: string | undefined | null): string | null {
+    const sanitized = sanitizeString(email);
+    return sanitized ? sanitized.toLowerCase() : null;
+}
+
+/**
+ * Transform frontend student population values to backend enum format
+ */
+function transformStudentPopulation(value: string): string {
+    const mapping: Record<string, string> = {
+        'under100': 'under_100',
+        '100-300': 'from_100_to_300',
+        '300-500': 'from_300_to_500',
+        '500+': 'over_500',
+    };
+    return mapping[value] || value;
+}
+
+/**
  * Transformer: frontend formData -> official API RegistrationRequest
+ * Includes input sanitization for all text fields
  */
 function transformFormData(data: RegistrationFormData): RegistrationRequest {
     return {
         school: {
-            name: data.basicInfo.schoolName,
+            name: sanitizeString(data.basicInfo.schoolName) || '',
             year_established: parseInt(data.basicInfo.yearEstablished, 10),
             school_type: data.basicInfo.schoolType.toLowerCase(),
-            student_population: data.basicInfo.studentPopulation.replace('-', ''),
+            student_population: transformStudentPopulation(data.basicInfo.studentPopulation),
         },
         location: {
-            country_code: data.location.country, // Assuming country name/code logic in Step2
-            city: data.location.cityTown,
-            address: data.location.physicalAddress,
+            country_code: data.location.country,
+            city: sanitizeString(data.location.cityTown) || '',
+            address: sanitizeString(data.location.physicalAddress) || '',
         },
         contact: {
-            school_phone: data.contact.schoolPhone || null,
-            school_email: data.contact.schoolEmail || null,
-            principal_name: data.contact.principalFullName,
-            principal_email: data.contact.principalEmail,
-            principal_phone: data.contact.principalPhone,
+            school_phone: sanitizeString(data.contact.schoolPhone),
+            school_email: sanitizeEmail(data.contact.schoolEmail),
+            principal_name: sanitizeString(data.contact.principalFullName) || '',
+            principal_email: sanitizeEmail(data.contact.principalEmail) || '',
+            principal_phone: sanitizeString(data.contact.principalPhone) || '',
         },
         applicant: {
             is_principal: data.aboutYou.iAmPrincipal,
-            name: data.aboutYou.iAmPrincipal ? null : (data.aboutYou.yourFullName || null),
-            email: data.aboutYou.iAmPrincipal ? null : (data.aboutYou.yourEmail || null),
-            phone: data.aboutYou.iAmPrincipal ? null : (data.aboutYou.yourPhone || null),
-            role: data.aboutYou.iAmPrincipal ? null : (data.aboutYou.yourRole || null),
+            name: data.aboutYou.iAmPrincipal ? null : sanitizeString(data.aboutYou.yourFullName),
+            email: data.aboutYou.iAmPrincipal ? null : sanitizeEmail(data.aboutYou.yourEmail),
+            phone: data.aboutYou.iAmPrincipal ? null : sanitizeString(data.aboutYou.yourPhone),
+            role: data.aboutYou.iAmPrincipal ? null : sanitizeString(data.aboutYou.yourRole),
             admin_choice: data.aboutYou.iAmPrincipal ? null : (data.aboutYou.whoManagesSystem === 'me' ? 'applicant' : 'principal'),
         },
         details: {
-            online_presence: data.details.onlinePresence.map(op => ({
-                type: op.type,
-                url: op.url
-            })),
+            online_presence: data.details.onlinePresence
+                .filter(op => op.url?.trim()) // Only include entries with URLs
+                .map(op => ({
+                    type: op.type,
+                    url: op.url.trim()
+                })),
             reasons: [
                 ...(data.details.whyTransparency ? ['transparency'] : []),
                 ...(data.details.whyAutomation ? ['automation'] : [])
             ],
-            other_reason: data.details.whyOtherReason || null,
+            other_reason: sanitizeString(data.details.whyOtherReason),
         }
     };
 }
 
 /**
  * Get list of countries
- * GET /countries
+ * GET /school-applications/countries
  */
 export async function getCountries(): Promise<Country[]> {
     try {
-        const response = await fetch(`${API_URL}/countries`);
+        const response = await fetch(`${API_URL}/school-applications/countries`);
 
         if (!response.ok) {
             throw new Error(`Failed to fetch countries: ${response.statusText}`);
         }
 
         const data = await response.json();
-        // Extract from nested countries array (Image 1)
         return data.countries;
     } catch (error) {
         console.error('Error fetching countries:', error);

@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EK-SMS - Registration Frontend Tasks</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background-color: #f9fafb;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    
+    header {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 3px solid #1a365d;
+    }
+    
+    .logo {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a365d;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a365d;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      font-size: 15px;
+      color: #6b7280;
+    }
+    
+    .meta {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    
+    .meta span {
+      margin-right: 24px;
+    }
+    
+    .overview {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .overview h2 {
+      font-size: 18px;
+      color: #1a365d;
+      margin-bottom: 12px;
+    }
+    
+    .overview p {
+      color: #4b5563;
+      margin-bottom: 12px;
+    }
+    
+    .task {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background-color: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .task-number {
+      background-color: #1a365d;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    
+    .task-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      flex: 1;
+    }
+    
+    .task-estimate {
+      font-size: 12px;
+      color: #6b7280;
+      background-color: #e5e7eb;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    
+    .task-body {
+      padding: 20px;
+    }
+    
+    .task-section {
+      margin-bottom: 20px;
+    }
+    
+    .task-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .task-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    
+    .task-description {
+      color: #4b5563;
+      font-size: 14px;
+    }
+    
+    .task-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .task-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 14px;
+      color: #4b5563;
+    }
+    
+    .task-list li::before {
+      content: "•";
+      color: #1a365d;
+      font-weight: bold;
+    }
+    
+    .checkbox-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .checkbox-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 14px;
+      color: #4b5563;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .checkbox-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .checkbox-list input[type="checkbox"] {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+    }
+    
+    .code-block {
+      background-color: #1f2937;
+      color: #e5e7eb;
+      padding: 16px;
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    
+    .code-block pre {
+      margin: 0;
+      white-space: pre;
+    }
+    
+    .file-path {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      color: #dc2626;
+      background-color: #fef2f2;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    
+    .dependency-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 4px;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    
+    .dep-none {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .dep-task {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .api-ref {
+      background-color: #f3e8ff;
+      color: #6b21a8;
+    }
+    
+    .wireframe-ref {
+      background-color: #fce7f3;
+      color: #9d174d;
+    }
+    
+    .wireframe-box {
+      background-color: #fdf2f8;
+      border: 1px solid #fbcfe8;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .wireframe-icon {
+      font-size: 24px;
+    }
+    
+    .wireframe-info {
+      flex: 1;
+    }
+    
+    .wireframe-label {
+      font-size: 12px;
+      color: #9d174d;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .wireframe-text {
+      font-size: 14px;
+      color: #831843;
+    }
+    
+    .note {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #1e40af;
+      margin: 12px 0;
+    }
+    
+    .warning {
+      background-color: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #92400e;
+      margin: 12px 0;
+    }
+    
+    .color-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 12px;
+      font-size: 13px;
+    }
+    
+    .color-swatch {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .progress-section {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .progress-section h2 {
+      font-size: 16px;
+      color: #1a365d;
+      margin-bottom: 16px;
+    }
+    
+    .progress-bar-container {
+      background-color: #e5e7eb;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    
+    .progress-bar {
+      background-color: #22c55e;
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    .progress-text {
+      font-size: 13px;
+      color: #6b7280;
+    }
+    
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .summary-item {
+      text-align: center;
+      padding: 12px;
+      background-color: #f9fafb;
+      border-radius: 8px;
+    }
+    
+    .summary-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a365d;
+    }
+    
+    .summary-label {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+    
+    .colors-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    @media (max-width: 640px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .task-header {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">EK-SMS</div>
+      <h1>Registration Frontend Tasks</h1>
+      <p class="subtitle">Frontend development tasks for the School Registration feature</p>
+      <div class="meta">
+        <span>Total Tasks: 12</span>
+        <span>Estimated Time: 14-18 hours</span>
+        <span>Reference: registration-api-contract.html</span>
+      </div>
+    </header>
+    
+    <!-- Progress Tracker -->
+    <div class="progress-section">
+      <h2>Progress Tracker</h2>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="progress-text"><span id="completedCount">0</span> of 12 tasks completed</div>
+      
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-number">12</div>
+          <div class="summary-label">Total Tasks</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">7</div>
+          <div class="summary-label">Form Steps</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">3</div>
+          <div class="summary-label">Extra Pages</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Overview -->
+    <div class="overview">
+      <h2>Before You Start</h2>
+      <p>Make sure you have:</p>
+      <ul class="task-list">
+        <li>Read the <strong>registration-api-contract.html</strong> document</li>
+        <li>Opened <strong>school-registration-wizard.html</strong> wireframe in browser</li>
+        <li>Next.js dev server running on port 3000</li>
+      </ul>
+      
+      <div class="note">
+        <strong>File Location:</strong> All pages go in <span class="file-path">apps/web/src/app/register/</span>
+      </div>
+      
+      <h3 style="margin-top: 20px; margin-bottom: 12px; font-size: 14px;">Brand Colors</h3>
+      <div class="colors-row">
+        <span class="color-box"><span class="color-swatch" style="background-color: #1a365d;"></span> Primary: #1a365d</span>
+        <span class="color-box"><span class="color-swatch" style="background-color: #1e4976;"></span> Hover: #1e4976</span>
+        <span class="color-box"><span class="color-swatch" style="background-color: #f5f5f5;"></span> Background: #f5f5f5</span>
+        <span class="color-box"><span class="color-swatch" style="background-color: #22c55e;"></span> Success: #22c55e</span>
+        <span class="color-box"><span class="color-swatch" style="background-color: #dc2626;"></span> Error: #dc2626</span>
+      </div>
+    </div>
+    
+    <!-- Task 1 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">1</div>
+        <div class="task-title">Create Registration Page Layout</div>
+        <div class="task-estimate">~1 hour</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Create the main registration page layout with header, progress stepper, and card container.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-none">None - Start here</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">school-registration-wizard.html → Header + Stepper (visible on all steps)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Files to Create</div>
+          <div class="code-block">
+            <pre>apps/web/src/app/register/
+├── page.tsx           # Main registration page
+├── layout.tsx         # Layout with header
+└── components/
+    ├── RegistrationHeader.tsx
+    └── ProgressStepper.tsx</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Header: EK-SMS logo (left), "Already registered? Login" link (right)</li>
+            <li>Stepper: 6 steps (Basic Info, Location, Contact, About You, Details, Review)</li>
+            <li>Stepper shows current step highlighted, completed steps with checkmark</li>
+            <li>Card container for form content (white background, rounded, shadow)</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Header displays correctly with logo and login link</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Stepper shows 6 steps</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Active step is highlighted</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Card container styled correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Responsive on mobile</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 2 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">2</div>
+        <div class="task-title">Create Form State Management</div>
+        <div class="task-estimate">~1 hour</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Set up state management to persist form data across all 6 steps. User should not lose data when navigating between steps.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 1</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Files to Create</div>
+          <div class="code-block">
+            <pre>apps/web/src/app/register/
+├── context/
+│   └── RegistrationContext.tsx
+└── types/
+    └── registration.ts</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Create TypeScript types matching the API contract request body</li>
+            <li>Use React Context to store form state</li>
+            <li>Track current step (1-6)</li>
+            <li>Functions: nextStep(), prevStep(), updateFormData(), resetForm()</li>
+            <li>Optional: Persist to sessionStorage so refresh doesn't lose data</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> TypeScript types created for form data</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Context provides form state and update functions</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Navigation between steps preserves data</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Step number tracked correctly</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 3 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">3</div>
+        <div class="task-title">Step 1: Basic Information Form</div>
+        <div class="task-estimate">~1 hour</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build the first step of the registration wizard - basic school information.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 2</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">school-registration-wizard.html → Click "Step 1" in top navigation</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Fields</div>
+          <ul class="task-list">
+            <li><strong>School Name</strong> - Text input (required, max 200 chars)</li>
+            <li><strong>Year Established</strong> - Number input (required, 1800 - current year)</li>
+            <li><strong>School Type</strong> - Dropdown: Public, Private, Mission (required)</li>
+            <li><strong>Student Population</strong> - Dropdown: Under 100, 100-300, 300-500, 500+ (required)</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All 4 fields render correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Validation: all fields required</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Validation: year must be valid range</li>
+            <li><input type="checkbox" onchange="updateProgress()"> "Continue" button disabled until valid</li>
+            <li><input type="checkbox" onchange="updateProgress()"> "Back to Home" link works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Data saves to context on continue</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 4 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">4</div>
+        <div class="task-title">Step 2: Location Form</div>
+        <div class="task-estimate">~1 hour</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build the location step with country dropdown and address fields.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 2</span>
+          <span class="dependency-tag api-ref">GET /countries endpoint</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">school-registration-wizard.html → Click "Step 2" in top navigation</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Fields</div>
+          <ul class="task-list">
+            <li><strong>Country</strong> - Dropdown loaded from /countries API (required)</li>
+            <li><strong>City/Town</strong> - Text input (required, max 100 chars)</li>
+            <li><strong>Physical Address</strong> - Textarea (required, max 500 chars)</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Country dropdown loads from API</li>
+            <li><input type="checkbox" onchange="updateProgress()"> All fields render and validate</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Previous button goes back to Step 1</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Continue button advances to Step 3</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Data saves to context</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 5 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">5</div>
+        <div class="task-title">Step 3: Contact Information Form</div>
+        <div class="task-estimate">~1.5 hours</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build the contact information step with school contact and principal details.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 2</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">school-registration-wizard.html → Click "Step 3" in top navigation</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Fields</div>
+          <p><strong>School Contact Section:</strong></p>
+          <ul class="task-list">
+            <li><strong>School Phone</strong> - Phone input (conditional)</li>
+            <li><strong>School Email</strong> - Email input (conditional)</li>
+          </ul>
+          <p style="margin-top: 12px;"><strong>Principal Section:</strong></p>
+          <ul class="task-list">
+            <li><strong>Full Name</strong> - Text input (required)</li>
+            <li><strong>Email</strong> - Email input (required)</li>
+            <li><strong>Phone</strong> - Phone input (required)</li>
+          </ul>
+        </div>
+        
+        <div class="warning">
+          <strong>Validation Rule:</strong> At least one of school_phone or school_email must be provided.
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Two sections display correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Conditional validation: at least one school contact</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Email fields validate email format</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Hint text shows about principal confirmation</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Data saves to context</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 6 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">6</div>
+        <div class="task-title">Step 4: About You Form</div>
+        <div class="task-estimate">~1.5 hours</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build the applicant information step with conditional fields based on whether applicant is the principal.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 2</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">school-registration-wizard.html → Click "Step 4" in top navigation. Toggle the checkbox to see both states.</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Fields</div>
+          <ul class="task-list">
+            <li><strong>"I am the Principal" checkbox</strong> - Controls conditional display</li>
+          </ul>
+          <p style="margin-top: 12px;"><strong>If NOT principal (checkbox unchecked):</strong></p>
+          <ul class="task-list">
+            <li><strong>Your Full Name</strong> - Text (required)</li>
+            <li><strong>Your Email</strong> - Email (required)</li>
+            <li><strong>Your Phone</strong> - Phone (required)</li>
+            <li><strong>Your Role</strong> - Text (required)</li>
+            <li><strong>Who should manage system?</strong> - Radio: "Me" or "The Principal"</li>
+          </ul>
+        </div>
+        
+        <div class="note">
+          <strong>UX:</strong> If checkbox is checked, show info message that principal becomes admin automatically.
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Checkbox toggles field visibility</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Conditional fields only required when visible</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Radio buttons for admin choice work</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Info message shows when "I am principal" checked</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Data saves to context</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 7 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">7</div>
+        <div class="task-title">Step 5: Final Details Form</div>
+        <div class="task-estimate">~1.5 hours</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build the final details step with online presence (optional) and reasons for using EK-SMS.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 2</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">school-registration-wizard.html → Click "Step 5" in top navigation</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Fields</div>
+          <p><strong>Online Presence (Optional):</strong></p>
+          <ul class="task-list">
+            <li>Dynamic list: Type dropdown (Website, Facebook, Other) + URL input</li>
+            <li>"Add another link" button to add more</li>
+            <li>Remove button for each entry</li>
+          </ul>
+          <p style="margin-top: 12px;"><strong>Why EK-SMS (Required):</strong></p>
+          <ul class="task-list">
+            <li>Checkbox: Transparency & Anti-corruption</li>
+            <li>Checkbox: Automating School Processes</li>
+            <li>At least one must be selected</li>
+            <li>Textarea for "Other reasons" (optional)</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Online presence allows adding/removing entries</li>
+            <li><input type="checkbox" onchange="updateProgress()"> URL validation for online presence fields</li>
+            <li><input type="checkbox" onchange="updateProgress()"> At least one reason checkbox required</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Optional textarea works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Data saves to context</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 8 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">8</div>
+        <div class="task-title">Step 6: Review & Submit Page</div>
+        <div class="task-estimate">~1.5 hours</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build the review page showing all entered data with edit links and terms acceptance.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 2</span>
+          <span class="dependency-tag dep-task">Tasks 3-7</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">school-registration-wizard.html → Click "Review" in top navigation</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Display all form data organized by section</li>
+            <li>Each section has "Edit" link that returns to that step</li>
+            <li>Terms & conditions checkbox (required to submit)</li>
+            <li>Submit button calls POST /school-applications API</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All data displays correctly by section</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Edit links navigate to correct steps</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Terms checkbox required</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Submit button disabled until terms accepted</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Submit shows loading state</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 9 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">9</div>
+        <div class="task-title">API Integration & Submit Handler</div>
+        <div class="task-estimate">~1.5 hours</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Create API client functions and connect submit to the backend.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 8</span>
+          <span class="dependency-tag api-ref">API Contract</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Files to Create</div>
+          <div class="code-block">
+            <pre>apps/web/src/lib/api/
+└── registration.ts   # API client functions</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Functions to Create</div>
+          <ul class="task-list">
+            <li>getCountries() → GET /countries</li>
+            <li>submitApplication(data) → POST /school-applications</li>
+            <li>verifyApplicant(token) → POST /school-applications/verify-applicant</li>
+            <li>resendVerification(applicationId, email) → POST /school-applications/resend-verification</li>
+            <li>getApplicationStatus(id, email) → GET /school-applications/{id}/status</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All API functions created with proper types</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error handling for network failures</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error handling for validation errors (400)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error handling for duplicate (409)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Submit redirects to success page on 201</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 10 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">10</div>
+        <div class="task-title">Success Page</div>
+        <div class="task-estimate">~1 hour</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build the success page shown after application submission with next steps.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 9</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">school-registration-wizard.html → Click "Success" in top navigation</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Show email icon and "Check your email" message</li>
+            <li>Display applicant email (partially masked okay)</li>
+            <li>Show numbered next steps</li>
+            <li>"Resend verification" link that calls resend API</li>
+            <li>Store application ID and email for resend functionality</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Success message displays with email</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Next steps shown clearly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Resend link works (calls API)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Resend shows feedback (success or rate limited)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Page accessible at /register/success</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 11 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">11</div>
+        <div class="task-title">Email Verification Page</div>
+        <div class="task-estimate">~1 hour</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build the page users land on when clicking the verification link in their email.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 9</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Route</div>
+          <div class="code-block">
+            <pre>/register/verify?token=abc123xyz</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Read token from URL query parameter</li>
+            <li>Call POST /school-applications/verify-applicant on page load</li>
+            <li>Show loading state while verifying</li>
+            <li>On success: Show success message with next steps</li>
+            <li>If needs principal confirmation: Show message about principal</li>
+            <li>On error (expired/invalid): Show error with option to request new link</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Token read from URL</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Verification API called automatically</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Success state shows correct message</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error state shows helpful message</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Loading state shown during API call</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 12 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">12</div>
+        <div class="task-title">Principal Confirmation Page</div>
+        <div class="task-estimate">~1 hour</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build the page principals land on when clicking the confirmation link in their email.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 9</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Route</div>
+          <div class="code-block">
+            <pre>/register/confirm-principal?token=xyz789abc</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Read token from URL query parameter</li>
+            <li>Show application summary (school name, applicant name, who becomes admin)</li>
+            <li>"Confirm" button calls POST /school-applications/confirm-principal</li>
+            <li>On success: Show confirmation complete message</li>
+            <li>On error: Show appropriate error message</li>
+          </ul>
+        </div>
+        
+        <div class="note">
+          <strong>Security:</strong> This page is accessed via email link only. The token provides authorization.
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Token read from URL</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Application summary displayed</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Confirm button works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Success state shows confirmation complete</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error state handles expired/invalid token</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p>EK-SMS Registration Frontend Tasks</p>
+      <p>Version 1.0 • January 2025</p>
+    </footer>
+  </div>
+  
+  <script>
+    function updateProgress() {
+      const checkboxes = document.querySelectorAll('.checkbox-list input[type="checkbox"]');
+      const checked = document.querySelectorAll('.checkbox-list input[type="checkbox"]:checked').length;
+      const total = checkboxes.length;
+      const percentage = Math.round((checked / total) * 100);
+      
+      document.getElementById('progressBar').style.width = percentage + '%';
+      document.getElementById('completedCount').textContent = checked;
+    }
+  </script>
+</body>
+</html>

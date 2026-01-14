@@ -10,6 +10,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRegistration } from '../context/RegistrationContext';
 import { submitApplication } from '@/lib/api/registration';
+import type { FormStep, BasicInfoData, LocationData, ContactData, AboutYouData, DetailsData } from '../types/registration';
+
+// Union type for all section data types
+type SectionData = BasicInfoData | LocationData | ContactData | AboutYouData | DetailsData;
 
 export function Step6Review() {
     const router = useRouter();
@@ -49,12 +53,13 @@ export function Step6Review() {
         }
     };
 
-    const SectionCard = ({ title, data, stepNumber }: { title: string; data: any; stepNumber: number }) => (
+    const SectionCard = ({ title, data, stepNumber }: { title: string; data: SectionData; stepNumber: FormStep }) => (
         <div className="bg-white rounded-lg border border-[#e5e7eb] p-6">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-[#1a365d]">{title}</h3>
                 <button
-                    onClick={() => goToStep(stepNumber as any)}
+                    onClick={() => goToStep(stepNumber)}
+                    aria-label={`Edit ${title}`}
                     className="text-sm text-[#3b82f6] hover:text-[#1e4976] underline"
                 >
                     Edit
@@ -107,7 +112,7 @@ export function Step6Review() {
 
             {/* Error Message */}
             {submitError && (
-                <div className="bg-[#dc2626]/10 border border-[#dc2626] rounded-lg p-4">
+                <div className="bg-[#dc2626]/10 border border-[#dc2626] rounded-lg p-4" role="alert">
                     <p className="text-[#dc2626] text-sm">{submitError}</p>
                 </div>
             )}
@@ -127,14 +132,16 @@ export function Step6Review() {
                         type="checkbox"
                         checked={acceptedTerms}
                         onChange={(e) => setAcceptedTerms(e.target.checked)}
+                        aria-required="true"
+                        aria-describedby="terms-error"
                         className="w-5 h-5 mt-0.5 text-[#1a365d] rounded focus:ring-2 focus:ring-[#3b82f6]"
                     />
                     <span className="ml-3 text-sm text-[#1f2937]">
-                        I accept the <a href="/terms" className="text-[#3b82f6] hover:underline" target="_blank">Terms & Conditions</a> <span className="text-[#dc2626]">*</span>
+                        I accept the <a href="/terms" className="text-[#3b82f6] hover:underline" target="_blank" rel="noopener noreferrer">Terms & Conditions</a> <span className="text-[#dc2626]">*</span>
                     </span>
                 </label>
                 {!acceptedTerms && submitError && (
-                    <p className="text-[#dc2626] text-sm mt-2">You must accept the terms & conditions to submit</p>
+                    <p id="terms-error" className="text-[#dc2626] text-sm mt-2" role="alert">You must accept the terms & conditions to submit</p>
                 )}
             </div>
 

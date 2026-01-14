@@ -117,6 +117,7 @@ export function Step5Details() {
                             {/* Remove Button */}
                             <button
                                 onClick={() => removeOnlinePresence(index)}
+                                aria-label={`Remove online presence entry ${index + 1}`}
                                 className="px-4 py-3 border border-[#dc2626] text-[#dc2626] rounded-lg hover:bg-[#dc2626]/10"
                             >
                                 Remove
@@ -127,6 +128,7 @@ export function Step5Details() {
                     {/* Add Another Link Button */}
                     <button
                         onClick={addOnlinePresence}
+                        aria-label="Add another online presence link"
                         className="px-4 py-3 border border-[#3b82f6] text-[#3b82f6] rounded-lg hover:bg-[#3b82f6]/10"
                     >
                         + Add another link
@@ -165,7 +167,7 @@ export function Step5Details() {
 
                     {/* Error message */}
                     {errors.whyEKSMS && (
-                        <p className="text-[#dc2626] text-sm">{errors.whyEKSMS}</p>
+                        <p className="text-[#dc2626] text-sm" role="alert">{errors.whyEKSMS}</p>
                     )}
 
                     {/* Other Reasons (Optional Textarea) */}

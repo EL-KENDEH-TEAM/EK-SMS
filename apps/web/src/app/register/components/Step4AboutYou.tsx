@@ -81,9 +81,9 @@ export function Step4AboutYou() {
 
             {/* Show info message if principal */}
             {currentData.iAmPrincipal && (
-                <div className="bg-[#3b82f6]/10 border border-[#3b82f6] rounded-lg p-4">
+                <div className="bg-[#3b82f6]/10 border border-[#3b82f6] rounded-lg p-4" role="status">
                     <p className="text-[#1a365d] text-sm">
-                        <strong>UX:</strong> If checkbox is checked, show info message that principal becomes admin automatically.
+                        <strong>Note:</strong> As the principal, you will automatically become the system administrator for your school.
                     </p>
                 </div>
             )}

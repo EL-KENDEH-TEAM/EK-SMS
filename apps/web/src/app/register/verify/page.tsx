@@ -2,53 +2,53 @@
 
 /**
  * Email Verification Page
- * 
+ *
  * Users land here when clicking verification link in email
  * Route: /register/verify?token=abc123xyz
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { verifyApplicant } from '@/lib/api/registration';
 
 type VerificationState = 'loading' | 'success' | 'error' | 'needs-principal';
 
-export function VerificationPage() {
+function VerificationPageContent() {
     const searchParams = useSearchParams();
     const [state, setState] = useState<VerificationState>('loading');
     const [message, setMessage] = useState('');
-    const [needsPrincipalConfirmation, setNeedsPrincipalConfirmation] = useState(false);
 
     useEffect(() => {
-        const token = searchParams.get('token');
+        const verifyToken = async () => {
+            const token = searchParams.get('token');
 
-        if (!token) {
-            setState('error');
-            setMessage('Invalid verification link. No token provided.');
-            return;
-        }
+            if (!token) {
+                setState('error');
+                setMessage('Invalid verification link. No token provided.');
+                return;
+            }
 
-        // Call verification API
-        verifyApplicant(token)
-            .then((response) => {
+            try {
+                const response = await verifyApplicant(token);
                 if (response.requires_principal_confirmation) {
                     setState('needs-principal');
-                    setNeedsPrincipalConfirmation(true);
                     setMessage(response.message || 'Verification successful! Waiting for principal confirmation.');
                 } else {
                     setState('success');
                     setMessage(response.message || 'Your email has been verified successfully!');
                 }
-            })
-            .catch((error) => {
+            } catch (error) {
                 setState('error');
                 setMessage(
                     error instanceof Error
                         ? error.message
                         : 'Verification failed. The link may be expired or invalid.'
                 );
-            });
+            }
+        };
+
+        verifyToken();
     }, [searchParams]);
 
     return (
@@ -105,10 +105,10 @@ export function VerificationPage() {
                         <p className="text-[#4b5563] mb-8">{message}</p>
 
                         <div className="bg-[#22c55e]/10 border border-[#22c55e] rounded-lg p-6 mb-8">
-                            <h2 className="font-semibold text-[#166534] mb-2">What's Next?</h2>
+                            <h2 className="font-semibold text-[#166534] mb-2">What&apos;s Next?</h2>
                             <div className="text-[#166534] text-sm space-y-2">
                                 <p>• Our team will review your application</p>
-                                <p>• You'll receive an email notification within 3-5 business days</p>
+                                <p>• You&apos;ll receive an email notification within 3-5 business days</p>
                                 <p>• Keep an eye on your inbox for updates</p>
                             </div>
                         </div>
@@ -146,7 +146,7 @@ export function VerificationPage() {
                         <div className="bg-[#f59e0b]/10 border border-[#f59e0b] rounded-lg p-6 mb-8">
                             <h2 className="font-semibold text-[#92400e] mb-2">Principal Confirmation Required</h2>
                             <p className="text-[#92400e] text-sm">
-                                We've sent a confirmation email to your principal. Your application will be processed once they confirm.
+                                We&apos;ve sent a confirmation email to your principal. Your application will be processed once they confirm.
                             </p>
                         </div>
 
@@ -207,6 +207,48 @@ export function VerificationPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+function LoadingFallback() {
+    return (
+        <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center px-4">
+            <div className="max-w-2xl w-full bg-white rounded-xl shadow-md p-8 sm:p-12">
+                <div className="text-center">
+                    <div className="flex justify-center mb-6">
+                        <svg
+                            className="animate-spin h-16 w-16 text-[#3b82f6]"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                        >
+                            <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                            ></circle>
+                            <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                        </svg>
+                    </div>
+                    <h1 className="text-2xl font-bold text-[#1a365d] mb-2">Loading...</h1>
+                    <p className="text-[#6b7280]">Please wait...</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export function VerificationPage() {
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <VerificationPageContent />
+        </Suspense>
     );
 }
 
