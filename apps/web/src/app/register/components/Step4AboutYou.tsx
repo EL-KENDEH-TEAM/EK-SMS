@@ -101,8 +101,8 @@ export function Step4AboutYou() {
                             type="text"
                             value={currentData.yourFullName || ''}
                             onChange={(e) => handleChange('yourFullName', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border ${errors.yourFullName ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
-                            placeholder="Your full name"
+                            className={`w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937] placeholder:text-[#6b7280] ${errors.yourFullName ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                            placeholder="e.g., Jane Doe"
                         />
                         {errors.yourFullName && <p className="text-[#dc2626] text-sm mt-1">{errors.yourFullName}</p>}
                     </div>
@@ -117,7 +117,7 @@ export function Step4AboutYou() {
                             type="email"
                             value={currentData.yourEmail || ''}
                             onChange={(e) => handleChange('yourEmail', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border ${errors.yourEmail ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                            className={`w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937] placeholder:text-[#6b7280] ${errors.yourEmail ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
                             placeholder="your@example.com"
                         />
                         {errors.yourEmail && <p className="text-[#dc2626] text-sm mt-1">{errors.yourEmail}</p>}
@@ -133,7 +133,7 @@ export function Step4AboutYou() {
                             type="tel"
                             value={currentData.yourPhone || ''}
                             onChange={(e) => handleChange('yourPhone', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border ${errors.yourPhone ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                            className={`w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937] placeholder:text-[#6b7280] ${errors.yourPhone ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
                             placeholder="+232 XX XXX XXXX"
                         />
                         {errors.yourPhone && <p className="text-[#dc2626] text-sm mt-1">{errors.yourPhone}</p>}
@@ -149,7 +149,7 @@ export function Step4AboutYou() {
                             type="text"
                             value={currentData.yourRole || ''}
                             onChange={(e) => handleChange('yourRole', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border ${errors.yourRole ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                            className={`w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937] placeholder:text-[#6b7280] ${errors.yourRole ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
                             placeholder="e.g., Vice Principal, Administrator"
                         />
                         {errors.yourRole && <p className="text-[#dc2626] text-sm mt-1">{errors.yourRole}</p>}

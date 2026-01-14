@@ -85,11 +85,12 @@ export function Step1BasicInfo() {
                     onChange={(e) => handleChange('schoolName', e.target.value)}
                     maxLength={200}
                     className={`
-            w-full px-4 py-3 rounded-lg border
-            ${errors.schoolName ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
-            focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent
-          `}
-                    placeholder="Enter school name"
+                        w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937]
+                        ${errors.schoolName ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
+                        focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent
+                        placeholder:text-[#6b7280]
+                    `}
+                    placeholder="e.g., Sierra Leone National School"
                 />
                 {errors.schoolName && (
                     <p className="text-[#dc2626] text-sm mt-1">{errors.schoolName}</p>
@@ -107,11 +108,12 @@ export function Step1BasicInfo() {
                     value={currentData.yearEstablished}
                     onChange={(e) => handleChange('yearEstablished', e.target.value)}
                     className={`
-            w-full px-4 py-3 rounded-lg border
-            ${errors.yearEstablished ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
-            focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent
-          `}
-                    placeholder="e.g., 2010"
+                        w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937]
+                        ${errors.yearEstablished ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
+                        focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent
+                        placeholder:text-[#6b7280]
+                    `}
+                    placeholder="e.g., 1985"
                     min="1800"
                     max={new Date().getFullYear()}
                 />
@@ -130,17 +132,18 @@ export function Step1BasicInfo() {
                     value={currentData.schoolType}
                     onChange={(e) => handleChange('schoolType', e.target.value)}
                     className={`
-            w-full px-4 py-3 rounded-lg border
-            ${errors.schoolType ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
-            focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent
-          `}
+                        w-full px-4 py-3 rounded-lg border bg-white
+                        ${errors.schoolType ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
+                        ${currentData.schoolType ? 'text-[#1f2937]' : 'text-[#6b7280]'}
+                        focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent
+                    `}
                 >
-                    <option value="">Select school type</option>
-                    <option value="public">Public</option>
-                    <option value="private">Private</option>
-                    <option value="mission">Mission</option>
-                    <option value="vocational">Vocational</option>
-                    <option value="university">University</option>
+                    <option value="" className="text-[#6b7280]">Select school type</option>
+                    <option value="public" className="text-[#1f2937]">Public</option>
+                    <option value="private" className="text-[#1f2937]">Private</option>
+                    <option value="mission" className="text-[#1f2937]">Mission</option>
+                    <option value="vocational" className="text-[#1f2937]">Vocational</option>
+                    <option value="university" className="text-[#1f2937]">University</option>
                 </select>
                 {errors.schoolType && (
                     <p className="text-[#dc2626] text-sm mt-1">{errors.schoolType}</p>
@@ -157,16 +160,17 @@ export function Step1BasicInfo() {
                     value={currentData.studentPopulation}
                     onChange={(e) => handleChange('studentPopulation', e.target.value)}
                     className={`
-            w-full px-4 py-3 rounded-lg border
-            ${errors.studentPopulation ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
-            focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent
-          `}
+                        w-full px-4 py-3 rounded-lg border bg-white
+                        ${errors.studentPopulation ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
+                        ${currentData.studentPopulation ? 'text-[#1f2937]' : 'text-[#6b7280]'}
+                        focus:outline-none focus:ring-2 focus:ring-[#3b82f6] focus:border-transparent
+                    `}
                 >
-                    <option value="">Select student population</option>
-                    <option value="under100">Under 100</option>
-                    <option value="100-300">100-300</option>
-                    <option value="300-500">300-500</option>
-                    <option value="500+">500+</option>
+                    <option value="" className="text-[#6b7280]">Select student population</option>
+                    <option value="under100" className="text-[#1f2937]">Under 100</option>
+                    <option value="100-300" className="text-[#1f2937]">100-300</option>
+                    <option value="300-500" className="text-[#1f2937]">300-500</option>
+                    <option value="500+" className="text-[#1f2937]">500+</option>
                 </select>
                 {errors.studentPopulation && (
                     <p className="text-[#dc2626] text-sm mt-1">{errors.studentPopulation}</p>

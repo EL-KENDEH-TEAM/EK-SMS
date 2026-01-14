@@ -100,7 +100,7 @@ export function Step3Contact() {
                             type="tel"
                             value={currentData.schoolPhone || ''}
                             onChange={(e) => handleChange('schoolPhone', e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+                            className="w-full px-4 py-3 rounded-lg border border-[#d1d5db] bg-white text-[#1f2937] placeholder:text-[#6b7280] focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
                             placeholder="+232 XX XXX XXXX"
                         />
                     </div>
@@ -115,7 +115,7 @@ export function Step3Contact() {
                             type="email"
                             value={currentData.schoolEmail || ''}
                             onChange={(e) => handleChange('schoolEmail', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border ${errors.schoolEmail ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                            className={`w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937] placeholder:text-[#6b7280] ${errors.schoolEmail ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
                             placeholder="school@example.com"
                         />
                         {errors.schoolEmail && <p className="text-[#dc2626] text-sm mt-1">{errors.schoolEmail}</p>}
@@ -140,8 +140,8 @@ export function Step3Contact() {
                             type="text"
                             value={currentData.principalFullName}
                             onChange={(e) => handleChange('principalFullName', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border ${errors.principalFullName ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
-                            placeholder="Principal's full name"
+                            className={`w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937] placeholder:text-[#6b7280] ${errors.principalFullName ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                            placeholder="e.g., Dr. John Smith"
                         />
                         {errors.principalFullName && <p className="text-[#dc2626] text-sm mt-1">{errors.principalFullName}</p>}
                     </div>
@@ -156,7 +156,7 @@ export function Step3Contact() {
                             type="email"
                             value={currentData.principalEmail}
                             onChange={(e) => handleChange('principalEmail', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border ${errors.principalEmail ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                            className={`w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937] placeholder:text-[#6b7280] ${errors.principalEmail ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
                             placeholder="principal@example.com"
                         />
                         {errors.principalEmail && <p className="text-[#dc2626] text-sm mt-1">{errors.principalEmail}</p>}
@@ -172,7 +172,7 @@ export function Step3Contact() {
                             type="tel"
                             value={currentData.principalPhone}
                             onChange={(e) => handleChange('principalPhone', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border ${errors.principalPhone ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                            className={`w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937] placeholder:text-[#6b7280] ${errors.principalPhone ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
                             placeholder="+232 XX XXX XXXX"
                         />
                         {errors.principalPhone && <p className="text-[#dc2626] text-sm mt-1">{errors.principalPhone}</p>}

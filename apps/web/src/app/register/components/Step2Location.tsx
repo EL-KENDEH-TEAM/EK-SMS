@@ -117,11 +117,16 @@ export function Step2Location() {
                         aria-required="true"
                         aria-invalid={!!errors.country}
                         aria-describedby={errors.country ? 'country-error' : undefined}
-                        className={`w-full px-4 py-3 rounded-lg border ${errors.country ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                        className={`
+                            w-full px-4 py-3 rounded-lg border bg-white
+                            ${errors.country ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
+                            ${currentData.country ? 'text-[#1f2937]' : 'text-[#6b7280]'}
+                            focus:outline-none focus:ring-2 focus:ring-[#3b82f6]
+                        `}
                     >
-                        <option value="">Select a country</option>
+                        <option value="" className="text-[#6b7280]">Select a country</option>
                         {countries.map((country) => (
-                            <option key={country.code} value={country.code}>
+                            <option key={country.code} value={country.code} className="text-[#1f2937]">
                                 {country.name}
                             </option>
                         ))}
@@ -141,7 +146,12 @@ export function Step2Location() {
                     value={currentData.cityTown}
                     onChange={(e) => handleChange('cityTown', e.target.value)}
                     maxLength={100}
-                    className={`w-full px-4 py-3 rounded-lg border ${errors.cityTown ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                    className={`
+                        w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937]
+                        ${errors.cityTown ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
+                        focus:outline-none focus:ring-2 focus:ring-[#3b82f6]
+                        placeholder:text-[#6b7280]
+                    `}
                     placeholder="e.g., Freetown"
                 />
                 {errors.cityTown && <p className="text-[#dc2626] text-sm mt-1">{errors.cityTown}</p>}
@@ -158,7 +168,12 @@ export function Step2Location() {
                     onChange={(e) => handleChange('physicalAddress', e.target.value)}
                     maxLength={500}
                     rows={4}
-                    className={`w-full px-4 py-3 rounded-lg border ${errors.physicalAddress ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                    className={`
+                        w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937]
+                        ${errors.physicalAddress ? 'border-[#dc2626]' : 'border-[#d1d5db]'}
+                        focus:outline-none focus:ring-2 focus:ring-[#3b82f6]
+                        placeholder:text-[#6b7280]
+                    `}
                     placeholder="Enter the full physical address of your school"
                 />
                 <p className="text-[#6b7280] text-xs mt-1">

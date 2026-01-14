@@ -92,12 +92,12 @@ export function Step5Details() {
                             <select
                                 value={entry.type}
                                 onChange={(e) => updateOnlinePresence(index, 'type', e.target.value)}
-                                className="w-40 px-4 py-3 rounded-lg border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+                                className={`w-40 px-4 py-3 rounded-lg border border-[#d1d5db] bg-white ${entry.type ? 'text-[#1f2937]' : 'text-[#6b7280]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
                             >
-                                <option value="">Select type</option>
-                                <option value="website">Website</option>
-                                <option value="facebook">Facebook</option>
-                                <option value="other">Other</option>
+                                <option value="" className="text-[#6b7280]">Select type</option>
+                                <option value="website" className="text-[#1f2937]">Website</option>
+                                <option value="facebook" className="text-[#1f2937]">Facebook</option>
+                                <option value="other" className="text-[#1f2937]">Other</option>
                             </select>
 
                             {/* URL Input */}
@@ -106,8 +106,8 @@ export function Step5Details() {
                                     type="url"
                                     value={entry.url}
                                     onChange={(e) => updateOnlinePresence(index, 'url', e.target.value)}
-                                    className={`w-full px-4 py-3 rounded-lg border ${errors[`onlinePresence_${index}`] ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
-                                    placeholder="Enter URL"
+                                    className={`w-full px-4 py-3 rounded-lg border bg-white text-[#1f2937] placeholder:text-[#6b7280] ${errors[`onlinePresence_${index}`] ? 'border-[#dc2626]' : 'border-[#d1d5db]'} focus:outline-none focus:ring-2 focus:ring-[#3b82f6]`}
+                                    placeholder="https://www.example.com"
                                 />
                                 {errors[`onlinePresence_${index}`] && (
                                     <p className="text-[#dc2626] text-sm mt-1">{errors[`onlinePresence_${index}`]}</p>
@@ -180,7 +180,7 @@ export function Step5Details() {
                             value={currentData.whyOtherReason || ''}
                             onChange={(e) => handleTextChange('whyOtherReason', e.target.value)}
                             rows={4}
-                            className="w-full px-4 py-3 rounded-lg border border-[#d1d5db] focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
+                            className="w-full px-4 py-3 rounded-lg border border-[#d1d5db] bg-white text-[#1f2937] placeholder:text-[#6b7280] focus:outline-none focus:ring-2 focus:ring-[#3b82f6]"
                             placeholder="Tell us any other reasons..."
                         />
                     </div>
