@@ -1,51 +1,65 @@
 /**
  * About Page
  *
- * Information about the EK-SMS platform.
+ * Information about EK-SMS platform.
  */
 
 import Link from "next/link";
 
 export default function AboutPage() {
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#f5f5f5]">
-      <div className="w-full max-w-2xl rounded-xl bg-white p-8 shadow-md">
-        <h1 className="text-3xl font-bold text-[#1f2937]">About EK-SMS</h1>
-        <p className="mt-4 text-[#4b5563]">
-          EL-KENDEH Smart School Management System (EK-SMS) is a comprehensive platform
-          designed to streamline school administration, enhance communication, and
-          improve educational outcomes.
-        </p>
+    return (
+        <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl mx-auto">
+                <div className="text-center mb-12">
+                    <h1 className="text-4xl font-bold text-gray-900">About EK-SMS</h1>
+                    <p className="mt-4 text-xl text-gray-600">
+                        EL-KENDEH Smart School Management System
+                    </p>
+                </div>
 
-        <div className="mt-8 space-y-4">
-          <div className="rounded-lg bg-[#f5f5f5] p-4">
-            <h2 className="font-semibold text-[#1f2937]">Features</h2>
-            <ul className="mt-2 list-inside list-disc text-[#4b5563]">
-              <li>Student enrollment and management</li>
-              <li>Staff and teacher administration</li>
-              <li>Grade and attendance tracking</li>
-              <li>Parent communication portal</li>
-              <li>Financial management</li>
-              <li>Reports and analytics</li>
-            </ul>
-          </div>
-        </div>
+                <div className="bg-white rounded-lg shadow-md p-8 space-y-6">
+                    <section>
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">Our Mission</h2>
+                        <p className="text-gray-600">
+                            EK-SMS is a comprehensive school management platform designed specifically for
+                            schools in West Africa. Our mission is to bring transparency, efficiency, and
+                            modern technology to educational institutions across the region.
+                        </p>
+                    </section>
 
-        <div className="mt-8 flex items-center gap-4">
-          <Link
-            href="/"
-            className="text-[#3b82f6] hover:underline"
-          >
-            &larr; Back to Home
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-lg bg-[#1a365d] px-4 py-2 text-white transition-colors hover:bg-[#1e4976]"
-          >
-            Register Your School
-          </Link>
+                    <section>
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">Key Features</h2>
+                        <ul className="list-disc list-inside text-gray-600 space-y-2">
+                            <li>Student enrollment and records management</li>
+                            <li>Fee collection and financial transparency</li>
+                            <li>Academic performance tracking</li>
+                            <li>Parent and guardian communication</li>
+                            <li>Staff management and payroll</li>
+                            <li>Reporting and analytics</li>
+                        </ul>
+                    </section>
+
+                    <section>
+                        <h2 className="text-2xl font-semibold text-gray-900 mb-4">Get Started</h2>
+                        <p className="text-gray-600 mb-4">
+                            Ready to transform your school&apos;s management? Register your school today
+                            and join the growing community of modern educational institutions.
+                        </p>
+                        <Link
+                            href="/register"
+                            className="inline-block rounded-md bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
+                        >
+                            Register Your School
+                        </Link>
+                    </section>
+                </div>
+
+                <div className="mt-8 text-center">
+                    <Link href="/" className="text-blue-600 hover:text-blue-800">
+                        ← Back to Home
+                    </Link>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
