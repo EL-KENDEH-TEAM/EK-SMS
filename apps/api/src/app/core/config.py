@@ -133,7 +133,7 @@ class Settings(BaseSettings):
     # ==========================================
     # Security
     # ==========================================
-    cors_origins: str = Field(default="http://localhost:3000")
+    cors_origins: str = Field(default="http://localhost:3000,https://ek-sms-web.vercel.app")
     allowed_hosts: str = Field(default="localhost,127.0.0.1")
 
     @computed_field

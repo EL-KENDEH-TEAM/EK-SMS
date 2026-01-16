@@ -28,23 +28,20 @@ export function Step2Location() {
     const [errors, setErrors] = useState<FormErrors>({});
     const [countries, setCountries] = useState<Array<{ code: string; name: string }>>([]);
     const [isLoadingCountries, setIsLoadingCountries] = useState(true);
-    const [usingFallbackCountries, setUsingFallbackCountries] = useState(false);
 
     const currentData = formData.location;
 
-    // Load countries from API
+    // Load countries from API (fallback matches backend exactly)
     useEffect(() => {
         const fetchCountries = async () => {
             try {
                 setIsLoadingCountries(true);
-                setUsingFallbackCountries(false);
                 const data = await getCountries();
                 setCountries(data);
             } catch (error) {
                 console.error('Failed to load countries:', error);
-                // Use fallback data and show warning (not error)
+                // Use fallback data (identical to backend SUPPORTED_COUNTRIES)
                 setCountries(FALLBACK_COUNTRIES);
-                setUsingFallbackCountries(true);
             } finally {
                 setIsLoadingCountries(false);
             }
@@ -93,15 +90,6 @@ export function Step2Location() {
                 <h2 className="text-2xl font-bold text-[#1a365d]">Location</h2>
                 <p className="text-[#4b5563] mt-2">Where is your school located?</p>
             </div>
-
-            {/* Fallback Warning */}
-            {usingFallbackCountries && (
-                <div className="bg-[#f59e0b]/10 border border-[#f59e0b] rounded-lg p-3" role="alert">
-                    <p className="text-[#92400e] text-sm">
-                        Unable to load full country list. Showing West Africa region only.
-                    </p>
-                </div>
-            )}
 
             {/* Country Dropdown */}
             <div>
