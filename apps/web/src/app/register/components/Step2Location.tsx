@@ -11,13 +11,16 @@ import { useRegistration } from '../context/RegistrationContext';
 import { getCountries } from '@/lib/api/registration';
 import type { LocationData, FormErrors } from '../types/registration';
 
-// Fallback countries for West Africa region (defined outside component to avoid dependency issues)
+// Fallback countries for West Africa region (matches backend SUPPORTED_COUNTRIES)
 const FALLBACK_COUNTRIES = [
-    { code: 'SL', name: 'Sierra Leone' },
     { code: 'LR', name: 'Liberia' },
-    { code: 'GH', name: 'Ghana' },
-    { code: 'NG', name: 'Nigeria' },
+    { code: 'SL', name: 'Sierra Leone' },
     { code: 'GN', name: 'Guinea' },
+    { code: 'GH', name: 'Ghana' },
+    { code: 'CI', name: "Côte d'Ivoire" },
+    { code: 'NG', name: 'Nigeria' },
+    { code: 'SN', name: 'Senegal' },
+    { code: 'GM', name: 'Gambia' },
 ];
 
 export function Step2Location() {

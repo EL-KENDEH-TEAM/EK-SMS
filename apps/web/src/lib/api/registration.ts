@@ -39,12 +39,13 @@ function sanitizeEmail(email: string | undefined | null): string | null {
 
 /**
  * Transform frontend student population values to backend enum format
+ * Backend enum: under_100, 100_to_300, 300_to_500, over_500
  */
 function transformStudentPopulation(value: string): string {
     const mapping: Record<string, string> = {
         'under100': 'under_100',
-        '100-300': 'from_100_to_300',
-        '300-500': 'from_300_to_500',
+        '100-300': '100_to_300',
+        '300-500': '300_to_500',
         '500+': 'over_500',
     };
     return mapping[value] || value;
