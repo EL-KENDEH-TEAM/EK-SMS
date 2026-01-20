@@ -13,7 +13,8 @@ export interface ApiResponse<T> {
 }
 
 export interface ApiErrorResponse {
-  detail: string;
+  error: string;
+  message: string;
 }
 
 class ApiClient {
@@ -50,9 +51,10 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        const errorData = data as ApiErrorResponse;
         return {
           data: null,
-          error: (data as ApiErrorResponse).detail || "An error occurred",
+          error: errorData.message || errorData.error || "An error occurred",
           status: response.status,
         };
       }
