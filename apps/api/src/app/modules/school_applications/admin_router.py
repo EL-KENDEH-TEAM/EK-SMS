@@ -28,6 +28,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import AdminUser, get_current_admin_user
 from app.core.database import get_db
 from app.modules.school_applications import service
 from app.modules.school_applications.models import ApplicationStatus
@@ -57,44 +58,6 @@ from app.modules.school_applications.service import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-# ============================================
-# Authentication Dependency (Placeholder)
-# ============================================
-# TODO: Replace with actual authentication when auth module is implemented
-
-
-class MockAdminUser:
-    """Mock admin user for development. Replace with actual auth."""
-
-    def __init__(self):
-        self.id = UUID("00000000-0000-0000-0000-000000000001")
-        self.email = "admin@eksms.dev"
-        self.role = "platform_admin"
-
-
-async def get_current_admin_user() -> MockAdminUser:
-    """
-    Get the current authenticated admin user.
-
-    TODO: Replace with actual implementation when auth module exists:
-    1. Extract JWT from Authorization header
-    2. Verify token signature and expiration
-    3. Extract user_id from token claims
-    4. Verify user has platform_admin role
-    5. Return User object
-
-    For now, returns a mock admin user for development.
-    """
-    # TODO: Implement actual authentication
-    # Example implementation:
-    # token = extract_token(authorization_header)
-    # user = await verify_jwt_and_get_user(db, token)
-    # if user.role != "platform_admin":
-    #     raise HTTPException(status_code=403, detail="Admin access required")
-    # return user
-    return MockAdminUser()
 
 
 # ============================================
@@ -256,7 +219,7 @@ async def list_applications(
         description="Maximum records to return",
     ),
     db: AsyncSession = Depends(get_db),
-    admin: MockAdminUser = Depends(get_current_admin_user),
+    admin: AdminUser = Depends(get_current_admin_user),
 ) -> ApplicationListResponse:
     """
     List applications with filters and pagination.
@@ -335,7 +298,7 @@ Get aggregated statistics for the admin dashboard.
 )
 async def get_stats(
     db: AsyncSession = Depends(get_db),
-    admin: MockAdminUser = Depends(get_current_admin_user),
+    admin: AdminUser = Depends(get_current_admin_user),
 ) -> DashboardStats:
     """
     Get aggregated statistics for the admin dashboard.
@@ -401,7 +364,7 @@ Returns all application fields including:
 async def get_application_detail(
     application_id: UUID,
     db: AsyncSession = Depends(get_db),
-    admin: MockAdminUser = Depends(get_current_admin_user),
+    admin: AdminUser = Depends(get_current_admin_user),
 ) -> ApplicationDetailResponse:
     """
     Get complete details of an application.
@@ -478,7 +441,7 @@ and records which admin is reviewing.
 async def start_review(
     application_id: UUID,
     db: AsyncSession = Depends(get_db),
-    admin: MockAdminUser = Depends(get_current_admin_user),
+    admin: AdminUser = Depends(get_current_admin_user),
 ) -> StartReviewResponse:
     """
     Start reviewing an application.
@@ -579,7 +542,7 @@ async def request_more_info(
     application_id: UUID,
     data: RequestInfoRequest,
     db: AsyncSession = Depends(get_db),
-    admin: MockAdminUser = Depends(get_current_admin_user),
+    admin: AdminUser = Depends(get_current_admin_user),
 ) -> RequestInfoResponse:
     """
     Request more information from applicant.
@@ -672,7 +635,7 @@ async def add_note(
     application_id: UUID,
     data: AddNoteRequest,
     db: AsyncSession = Depends(get_db),
-    admin: MockAdminUser = Depends(get_current_admin_user),
+    admin: AdminUser = Depends(get_current_admin_user),
 ) -> AddNoteResponse:
     """
     Add an internal note to an application.
@@ -773,7 +736,7 @@ This is an atomic operation that:
 async def approve_application(
     application_id: UUID,
     db: AsyncSession = Depends(get_db),
-    admin: MockAdminUser = Depends(get_current_admin_user),
+    admin: AdminUser = Depends(get_current_admin_user),
 ) -> ApproveResponse:
     """
     Approve application and provision school.
@@ -888,7 +851,7 @@ async def reject_application(
     application_id: UUID,
     data: RejectRequest,
     db: AsyncSession = Depends(get_db),
-    admin: MockAdminUser = Depends(get_current_admin_user),
+    admin: AdminUser = Depends(get_current_admin_user),
 ) -> RejectResponse:
     """
     Reject an application.
