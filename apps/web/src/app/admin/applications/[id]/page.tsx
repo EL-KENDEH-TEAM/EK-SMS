@@ -1,5 +1,7 @@
 'use client';
 
+// Task 6: Application Detail Status Board Completed
+
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
