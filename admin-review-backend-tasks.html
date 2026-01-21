@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EK-SMS - Admin Review Dashboard Backend Tasks</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background-color: #f9fafb;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    
+    header {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 3px solid #1a365d;
+    }
+    
+    .logo {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a365d;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a365d;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      font-size: 15px;
+      color: #6b7280;
+    }
+    
+    .meta {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    
+    .meta span {
+      margin-right: 24px;
+    }
+    
+    .branch-box {
+      background-color: #f0fdf4;
+      border: 2px solid #22c55e;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-top: 20px;
+    }
+    
+    .branch-label {
+      font-size: 12px;
+      color: #166534;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    
+    .branch-name {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: #166534;
+    }
+    
+    .overview {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .overview h2 {
+      font-size: 18px;
+      color: #1a365d;
+      margin-bottom: 12px;
+    }
+    
+    .overview p {
+      color: #4b5563;
+      margin-bottom: 12px;
+    }
+    
+    .task {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background-color: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .task-number {
+      background-color: #1a365d;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    
+    .task-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      flex: 1;
+    }
+    
+    .task-body {
+      padding: 20px;
+    }
+    
+    .task-section {
+      margin-bottom: 20px;
+    }
+    
+    .task-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .task-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    
+    .task-description {
+      color: #4b5563;
+      font-size: 14px;
+    }
+    
+    .task-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .task-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 14px;
+      color: #4b5563;
+    }
+    
+    .task-list li::before {
+      content: "•";
+      color: #1a365d;
+      font-weight: bold;
+    }
+    
+    .checkbox-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .checkbox-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 14px;
+      color: #4b5563;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .checkbox-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .checkbox-list input[type="checkbox"] {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+    }
+    
+    .code-block {
+      background-color: #1f2937;
+      color: #e5e7eb;
+      padding: 16px;
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    
+    .code-block pre {
+      margin: 0;
+      white-space: pre;
+    }
+    
+    .file-path {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      color: #dc2626;
+      background-color: #fef2f2;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    
+    .dependency-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 4px;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    
+    .dep-none {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .dep-task {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .api-ref {
+      background-color: #f3e8ff;
+      color: #6b21a8;
+    }
+    
+    .note {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #1e40af;
+      margin: 12px 0;
+    }
+    
+    .warning {
+      background-color: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #92400e;
+      margin: 12px 0;
+    }
+    
+    .progress-section {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .progress-section h2 {
+      font-size: 16px;
+      color: #1a365d;
+      margin-bottom: 16px;
+    }
+    
+    .progress-bar-container {
+      background-color: #e5e7eb;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    
+    .progress-bar {
+      background-color: #22c55e;
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    .progress-text {
+      font-size: 13px;
+      color: #6b7280;
+    }
+    
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .summary-item {
+      text-align: center;
+      padding: 12px;
+      background-color: #f9fafb;
+      border-radius: 8px;
+    }
+    
+    .summary-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a365d;
+    }
+    
+    .summary-label {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+    
+    @media (max-width: 640px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .task-header {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">EK-SMS</div>
+      <h1>Admin Review Dashboard Backend Tasks</h1>
+      <p class="subtitle">Backend development tasks for the Admin Review Dashboard feature</p>
+      <div class="meta">
+        <span>Total Tasks: 12</span>
+        <span>Reference: admin-review-api-contract.html</span>
+      </div>
+      
+      <div class="branch-box">
+        <div class="branch-label">🌿 Feature Branch</div>
+        <div class="branch-name">feature/admin-review-dashboard</div>
+        <div style="font-size: 12px; color: #166534; margin-top: 8px;">Create this branch from <code>develop</code> before starting. All work should be done in this branch.</div>
+      </div>
+    </header>
+    
+    <!-- Progress Tracker -->
+    <div class="progress-section">
+      <h2>Progress Tracker</h2>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="progress-text"><span id="completedCount">0</span> of 12 tasks completed</div>
+      
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-number">12</div>
+          <div class="summary-label">Total Tasks</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">8</div>
+          <div class="summary-label">API Endpoints</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">3</div>
+          <div class="summary-label">Email Templates</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Overview -->
+    <div class="overview">
+      <h2>Before You Start</h2>
+      <p>Make sure you have:</p>
+      <ul class="task-list">
+        <li>Read the <strong>admin-review-api-contract.html</strong> document</li>
+        <li>Reviewed the <strong>admin-review-specification.html</strong> document</li>
+        <li>Understanding of existing school_applications module</li>
+        <li>FastAPI dev server running on port 8002</li>
+        <li>PostgreSQL and Redis containers running</li>
+      </ul>
+      
+      <div class="note">
+        <strong>Architecture:</strong> Follow the layered pattern: <code>Router → Service → Repository → Database</code>
+      </div>
+      
+      <div class="note">
+        <strong>File Location:</strong> Admin endpoints will extend the existing <span class="file-path">apps/api/src/app/modules/school_applications/</span> module
+      </div>
+    </div>
+    
+    <!-- Task 1 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">1</div>
+        <div class="task-title">Database Migration: Add internal_notes Field</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Create Alembic migration to add the internal_notes JSONB field to school_applications table for admin-only notes.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-none">None - Start here</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Migration File</div>
+          <div class="code-block">
+            <pre>apps/api/alembic/versions/
+└── XXXX_add_internal_notes_to_applications.py</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Create new Alembic migration: <code>alembic revision -m "add internal_notes to applications"</code></li>
+            <li>Add column: <code>internal_notes</code> (JSONB, nullable)</li>
+            <li>Structure: Array of objects with {note: str, created_by: UUID, created_at: datetime}</li>
+            <li>Update models.py: Add internal_notes field to SchoolApplication model</li>
+            <li>Test migration: Run <code>alembic upgrade head</code> and verify in database</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Migration file created</li>
+            <li><input type="checkbox" onchange="updateProgress()"> internal_notes column added to table</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Model updated with new field</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Migration runs without errors</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Can rollback migration successfully</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 2 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">2</div>
+        <div class="task-title">Create Admin Schemas (Pydantic)</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Define Pydantic schemas for admin endpoints - request/response models for all 8 admin operations.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 1</span>
+          <span class="dependency-tag api-ref">See admin-review-api-contract.html</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">File to Modify</div>
+          <div class="code-block">
+            <pre>apps/api/src/app/modules/school_applications/
+└── schemas.py  # Add admin schemas to existing file</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>ApplicationListItem: Fields for list view (id, school_name, country, city, status, submitted_at, etc.)</li>
+            <li>ApplicationListResponse: {applications: list, total: int, skip: int, limit: int}</li>
+            <li>DashboardStats: 6 stat fields (pending_review, under_review, more_info_requested, approved_this_week, total_this_month, avg_review_time_days)</li>
+            <li>ApplicationDetailResponse: Complete application with all fields + internal_notes</li>
+            <li>RequestInfoRequest: {message: str} with validation (10-1000 chars)</li>
+            <li>RejectRequest: {reason: str} with validation (20-1000 chars)</li>
+            <li>AddNoteRequest: {note: str} with validation (1-2000 chars)</li>
+            <li>InternalNote: {note: str, created_by: UUID, created_at: datetime}</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All 8+ schemas defined</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Field validations implemented</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Types match API contract exactly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Schemas have proper examples/descriptions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 3 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">3</div>
+        <div class="task-title">Repository: Admin Query Functions</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Add repository functions for admin operations - database queries with filtering, pagination, and aggregations.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 1</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">File to Modify</div>
+          <div class="code-block">
+            <pre>apps/api/src/app/modules/school_applications/
+└── repository.py  # Add admin functions</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li><code>get_applications(filters, skip, limit, sort)</code>: List with filters (status, country, search), pagination, sorting</li>
+            <li><code>get_dashboard_stats()</code>: Count aggregations for each status + avg review time calculation</li>
+            <li><code>update_status(id, status, reviewed_by)</code>: Update application status and reviewer</li>
+            <li><code>add_internal_note(id, note_obj)</code>: Append note to internal_notes JSON array</li>
+            <li><code>update_decision_reason(id, reason)</code>: Store rejection/info request reason</li>
+            <li>Use SQLAlchemy async queries with proper filtering and joins</li>
+            <li>All functions should be async and use AsyncSession</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All repository functions implemented</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Filters work correctly (status, country, search)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Pagination implemented</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Stats aggregation works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Internal notes append to JSON array</li>
+            <li><input type="checkbox" onchange="updateProgress()"> All queries are async</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 4 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">4</div>
+        <div class="task-title">Service: Admin Business Logic</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Implement service layer functions that orchestrate business logic, call repositories, and handle email sending.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 2</span>
+          <span class="dependency-tag dep-task">Task 3</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">File to Modify</div>
+          <div class="code-block">
+            <pre>apps/api/src/app/modules/school_applications/
+└── service.py  # Add admin service functions</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li><code>get_applications_for_admin()</code>: Call repository, format response</li>
+            <li><code>get_dashboard_stats()</code>: Calculate stats, return formatted</li>
+            <li><code>start_review(app_id, admin_id)</code>: Update status to "under_review", set reviewed_by and reviewed_at</li>
+            <li><code>request_more_info(app_id, message)</code>: Update status, send email with message, store in decision_reason</li>
+            <li><code>approve_application(app_id)</code>: Atomic transaction: create school, create admin user, generate temp password, send welcome email, update status</li>
+            <li><code>reject_application(app_id, reason)</code>: Update status, send rejection email with reason, store in decision_reason</li>
+            <li><code>add_internal_note(app_id, note, admin_id)</code>: Create note object, append to internal_notes</li>
+            <li>All functions should validate state transitions (can only approve/reject from reviewable states)</li>
+            <li>Use custom exceptions for business logic errors</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All service functions implemented</li>
+            <li><input type="checkbox" onchange="updateProgress()"> State transitions validated</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Email sending integrated</li>
+            <li><input type="checkbox" onchange="updateProgress()"> School provisioning is atomic (transaction)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Custom exceptions raised for errors</li>
+            <li><input type="checkbox" onchange="updateProgress()"> All functions are async</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 5 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">5</div>
+        <div class="task-title">Router: List & Stats Endpoints</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Create admin router with authentication and implement first two endpoints: list applications and dashboard stats.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 4</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">File to Create</div>
+          <div class="code-block">
+            <pre>apps/api/src/app/modules/school_applications/
+└── admin_router.py  # New file for admin endpoints</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Create new router: <code>router = APIRouter(prefix="/admin/applications", tags=["Admin"])</code></li>
+            <li>Add authentication dependency that requires platform_admin role</li>
+            <li><code>GET /admin/applications</code>: Query params (skip, limit, status, country_code, search, sort_by, sort_order)</li>
+            <li><code>GET /admin/applications/stats</code>: No params, returns dashboard stats</li>
+            <li>Proper error handling with HTTPException</li>
+            <li>Use existing custom exception patterns (ApplicationServiceError, etc.)</li>
+            <li>Add comprehensive docstrings and OpenAPI documentation</li>
+            <li>Register router in app/api.py</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Admin router created</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Authentication dependency added</li>
+            <li><input type="checkbox" onchange="updateProgress()"> List endpoint works with all filters</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Stats endpoint returns correct data</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error handling implemented</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Router registered in main API</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Endpoints appear in /docs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 6 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">6</div>
+        <div class="task-title">Router: Detail & Review Endpoints</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Add endpoints to get application detail and start review process.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 5</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li><code>GET /admin/applications/{id}</code>: Get complete application details including internal_notes</li>
+            <li><code>POST /admin/applications/{id}/review</code>: Start review - update status to "under_review", set reviewed_by to current admin</li>
+            <li>Get current admin from auth dependency</li>
+            <li>Validate application exists</li>
+            <li>Validate state transitions (can only start review from "pending_review")</li>
+            <li>Return appropriate error responses (404, 409)</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Detail endpoint returns full application</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Internal notes included in response</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Start review endpoint works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> reviewed_by set to current admin</li>
+            <li><input type="checkbox" onchange="updateProgress()"> State validation prevents invalid transitions</li>
+            <li><input type="checkbox" onchange="updateProgress()"> 404 returned if application not found</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 7 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">7</div>
+        <div class="task-title">Router: Request Info & Notes Endpoints</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Add endpoints to request more information from applicants and add internal admin notes.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 6</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li><code>POST /admin/applications/{id}/request-info</code>: Body {message}, updates status to "more_info_requested"</li>
+            <li>Send email to applicant with admin's message</li>
+            <li>Store message in decision_reason field</li>
+            <li><code>POST /admin/applications/{id}/notes</code>: Body {note}, appends note to internal_notes array</li>
+            <li>Note includes: note text, created_by (current admin), created_at (current timestamp)</li>
+            <li>Validate message/note length (10-1000 chars for message, 1-2000 for note)</li>
+            <li>Both endpoints require authentication</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Request info endpoint works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Email sent to applicant with message</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Status updated correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Add note endpoint works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Note appended to internal_notes array</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Validation enforced on both endpoints</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 8 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">8</div>
+        <div class="task-title">Router: Approve Endpoint with School Provisioning</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Implement the most critical endpoint: approve application with atomic school provisioning (school + admin user creation).</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 7</span>
+        </div>
+        
+        <div class="warning">
+          <strong>Critical:</strong> School provisioning must be atomic. All steps must succeed or everything rolls back.
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li><code>POST /admin/applications/{id}/approve</code>: No body required</li>
+            <li>Atomic transaction with 5 steps:
+              <ol style="margin-left: 20px; margin-top: 8px;">
+                <li>Create school record in schools table</li>
+                <li>Create admin user in users table (must_change_password=true, must_setup_2fa=true)</li>
+                <li>Generate secure temporary password (16 chars)</li>
+                <li>Send welcome email with credentials and login URL</li>
+                <li>Update application status to "approved"</li>
+              </ol>
+            </li>
+            <li>If ANY step fails, rollback entire transaction</li>
+            <li>Never log or return plain text password (only send via email once)</li>
+            <li>Return school_id and admin_user_id on success</li>
+            <li>Handle provisioning errors with clear messages</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Approve endpoint implemented</li>
+            <li><input type="checkbox" onchange="updateProgress()"> School record created correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Admin user created with correct flags</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Temp password generated (secure random)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Welcome email sent successfully</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Application status updated to approved</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Transaction is atomic (all-or-nothing)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Rollback works on failure</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Password never logged or exposed</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 9 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">9</div>
+        <div class="task-title">Router: Reject Endpoint</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Implement reject endpoint with reason storage and rejection email.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 7</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li><code>POST /admin/applications/{id}/reject</code>: Body {reason}</li>
+            <li>Validate reason is at least 20 characters</li>
+            <li>Update status to "rejected"</li>
+            <li>Store reason in decision_reason field</li>
+            <li>Send rejection email to applicant with reason</li>
+            <li>Include in email: "You may reapply after 30 days"</li>
+            <li>Validate state (can only reject reviewable applications)</li>
+            <li>Rejection is permanent (no undo through UI)</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Reject endpoint implemented</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Reason validation enforced (min 20 chars)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Status updated to rejected</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Reason stored in decision_reason</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Rejection email sent</li>
+            <li><input type="checkbox" onchange="updateProgress()"> State validation prevents invalid rejections</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 10 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">10</div>
+        <div class="task-title">Email Templates: Admin Actions</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Create three email templates for admin actions: request more info, approve, and reject.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 4</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Files to Create</div>
+          <div class="code-block">
+            <pre>apps/api/src/app/core/email_templates/
+├── admin_request_more_info.html
+├── application_approved.html
+└── application_rejected.html</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li><strong>Request More Info:</strong> Template with placeholders for {school_name}, {admin_message}, {application_id}</li>
+            <li><strong>Application Approved:</strong> Welcome message with {school_name}, {admin_name}, {admin_email}, {temp_password}, {login_url}, instructions for password change and 2FA setup</li>
+            <li><strong>Application Rejected:</strong> Template with {school_name}, {rejection_reason}, "You may reapply after 30 days" notice</li>
+            <li>Use existing email helper functions from core/email.py</li>
+            <li>Follow same styling as existing verification emails</li>
+            <li>All templates should be mobile-responsive</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All 3 email templates created</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Templates have correct placeholders</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Styling matches existing emails</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Templates are mobile-responsive</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Email functions added to core/email.py</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test emails render correctly</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 11 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">11</div>
+        <div class="task-title">Authentication & Authorization</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Implement authentication middleware and role-based authorization for admin endpoints.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 5</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Create <code>get_current_admin_user()</code> dependency that:
+              <ol style="margin-left: 20px; margin-top: 8px;">
+                <li>Verifies JWT token is valid</li>
+                <li>Checks user role is "platform_admin"</li>
+                <li>Returns current user or raises 401/403</li>
+              </ol>
+            </li>
+            <li>Add to all admin endpoints as dependency</li>
+            <li>Return proper HTTP status codes: 401 (not authenticated), 403 (not authorized)</li>
+            <li>Include user info in error responses</li>
+            <li>Log all admin actions with user ID and IP address</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Auth dependency created</li>
+            <li><input type="checkbox" onchange="updateProgress()"> JWT validation works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Role check enforces platform_admin only</li>
+            <li><input type="checkbox" onchange="updateProgress()"> 401 returned for invalid/missing token</li>
+            <li><input type="checkbox" onchange="updateProgress()"> 403 returned for non-admin users</li>
+            <li><input type="checkbox" onchange="updateProgress()"> All admin endpoints protected</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Admin actions logged</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 12 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">12</div>
+        <div class="task-title">Testing & Error Handling</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Write tests for all admin endpoints and ensure comprehensive error handling throughout.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Tasks 1-11</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Files to Create</div>
+          <div class="code-block">
+            <pre>apps/api/tests/modules/school_applications/
+├── test_admin_endpoints.py
+└── test_school_provisioning.py</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Testing Checklist</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Test list endpoint with all filter combinations</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test dashboard stats calculation</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test detail endpoint returns correct data</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test start review updates status correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test request info sends email</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test approve creates school and admin user</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test approve rollback on failure</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test reject sends email with reason</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test add note appends to array</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test authentication rejects unauthenticated requests</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test authorization rejects non-admin users</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test state validation (can't approve rejected app)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test 404 for non-existent applications</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test validation errors return 400</li>
+            <li><input type="checkbox" onchange="updateProgress()"> All tests pass with pytest</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test coverage above 80%</li>
+          </ul>
+        </div>
+        
+        <div class="note">
+          <strong>Run tests:</strong> <code>cd apps/api && pytest tests/modules/school_applications/test_admin_endpoints.py -v</code>
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p>EK-SMS Admin Review Dashboard Backend Tasks</p>
+      <p>Document Version 1.0 • January 2026</p>
+      <p>Feature Branch: feature/admin-review-dashboard</p>
+    </footer>
+  </div>
+  
+  <script>
+    function updateProgress() {
+      const checkboxes = document.querySelectorAll('.checkbox-list input[type="checkbox"]');
+      const total = checkboxes.length;
+      const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+      const percentage = (checked / total) * 100;
+      
+      document.getElementById('progressBar').style.width = percentage + '%';
+      document.getElementById('completedCount').textContent = checked;
+      
+      // Save to localStorage
+      const checkedValues = Array.from(checkboxes).map(cb => cb.checked);
+      localStorage.setItem('adminBackendProgress', JSON.stringify(checkedValues));
+    }
+    
+    // Load progress from localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('adminBackendProgress');
+      if (saved) {
+        const checkedValues = JSON.parse(saved);
+        const checkboxes = document.querySelectorAll('.checkbox-list input[type="checkbox"]');
+        checkboxes.forEach((cb, index) => {
+          if (checkedValues[index]) {
+            cb.checked = true;
+          }
+        });
+        updateProgress();
+      }
+    });
+  </script>
+</body>
+</html>

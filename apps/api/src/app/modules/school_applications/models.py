@@ -149,6 +149,12 @@ class SchoolApplication(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # Internal admin notes (admin-only, never shown to applicants)
+    # Stored as JSON array: [{note: str, created_by: UUID, created_at: datetime}, ...]
+    internal_notes: Mapped[list | None] = mapped_column(
+        JSON, nullable=True, comment="Admin-only internal notes stored as JSON array"
+    )
+
     # Audit timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False

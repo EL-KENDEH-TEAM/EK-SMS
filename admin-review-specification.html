@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EK-SMS - Admin Review Dashboard Feature Specification</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background-color: #f9fafb;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    
+    header {
+      margin-bottom: 48px;
+      padding-bottom: 24px;
+      border-bottom: 3px solid #1a365d;
+    }
+    
+    .logo {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a365d;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a365d;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      font-size: 16px;
+      color: #6b7280;
+    }
+    
+    .meta {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    
+    .meta span {
+      margin-right: 24px;
+    }
+    
+    .feature-branch {
+      display: inline-block;
+      background-color: #f0fdf4;
+      border: 2px solid #22c55e;
+      color: #166534;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 12px;
+    }
+    
+    .toc {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+    
+    .toc h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #374151;
+    }
+    
+    .toc ol {
+      padding-left: 24px;
+    }
+    
+    .toc li {
+      margin-bottom: 8px;
+    }
+    
+    .toc a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    
+    .toc a:hover {
+      text-decoration: underline;
+    }
+    
+    section {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1a365d;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      color: #374151;
+      margin-top: 28px;
+      margin-bottom: 12px;
+    }
+    
+    h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #4b5563;
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+    
+    p {
+      margin-bottom: 16px;
+      color: #4b5563;
+    }
+    
+    ul, ol {
+      margin-bottom: 16px;
+      padding-left: 24px;
+      color: #4b5563;
+    }
+    
+    li {
+      margin-bottom: 8px;
+    }
+    
+    .field-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    
+    .field-table th {
+      text-align: left;
+      padding: 12px;
+      background-color: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .field-table td {
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+    
+    .field-table tr:hover {
+      background-color: #f9fafb;
+    }
+    
+    .callout {
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+    
+    .callout-info {
+      background-color: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      color: #1e40af;
+    }
+    
+    .callout-warning {
+      background-color: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      color: #92400e;
+    }
+    
+    .callout-success {
+      background-color: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      color: #166534;
+    }
+    
+    .callout-danger {
+      background-color: #fef2f2;
+      border-left: 4px solid #ef4444;
+      color: #991b1b;
+    }
+    
+    .decision-box {
+      background-color: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
+    }
+    
+    .decision-box h4 {
+      color: #166534;
+      margin-top: 0;
+    }
+    
+    .decision-box strong {
+      color: #166534;
+    }
+    
+    code {
+      background-color: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #dc2626;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-pending {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+    
+    .status-review {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .status-success {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .status-error {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .workflow-step {
+      background-color: #f9fafb;
+      border-left: 3px solid #3b82f6;
+      padding: 16px;
+      margin: 12px 0;
+      border-radius: 4px;
+    }
+    
+    .workflow-step-title {
+      font-weight: 600;
+      color: #1e40af;
+      margin-bottom: 8px;
+    }
+    
+    .email-template {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    
+    .email-header {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .email-subject {
+      color: #1e40af;
+    }
+    
+    .email-body {
+      color: #4b5563;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+    
+    .placeholder {
+      background-color: #dbeafe;
+      color: #1e40af;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">EK-SMS</div>
+      <h1>Admin Review Dashboard Feature Specification</h1>
+      <p class="subtitle">Platform admin interface for reviewing and managing school registration applications</p>
+      <div class="meta">
+        <span>Version: 1.0</span>
+        <span>Last Updated: January 2026</span>
+        <span>Status: Final Draft</span>
+      </div>
+      <div class="feature-branch">
+        Feature Branch: feature/admin-review-dashboard
+      </div>
+    </header>
+    
+    <!-- Table of Contents -->
+    <nav class="toc">
+      <h2>Table of Contents</h2>
+      <ol>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#actors">Actors & Permissions</a></li>
+        <li><a href="#dashboard-view">Dashboard View</a></li>
+        <li><a href="#applications-list">Applications List View</a></li>
+        <li><a href="#application-detail">Application Detail View</a></li>
+        <li><a href="#admin-actions">Admin Actions & Workflows</a></li>
+        <li><a href="#database-schema">Database Schema Updates</a></li>
+        <li><a href="#school-provisioning">School Provisioning Process</a></li>
+        <li><a href="#email-templates">Email Templates</a></li>
+        <li><a href="#edge-cases">Edge Cases & Business Rules</a></li>
+        <li><a href="#security">Security Considerations</a></li>
+      </ol>
+    </nav>
+    
+    <!-- Section 1: Overview -->
+    <section id="overview">
+      <h2>1. Overview</h2>
+      
+      <h3>1.1 Purpose</h3>
+      <p>The Admin Review Dashboard is the platform admin interface for managing school registration applications. It enables EK-SMS platform administrators to review, approve, reject, or request additional information from schools that have completed the registration process.</p>
+      
+      <h3>1.2 Goals</h3>
+      <ul>
+        <li><strong>Efficiency:</strong> Enable admins to quickly review and process applications</li>
+        <li><strong>Transparency:</strong> Provide complete audit trail of all admin actions</li>
+        <li><strong>Quality Control:</strong> Ensure only legitimate schools are onboarded</li>
+        <li><strong>Communication:</strong> Streamline communication between admins and applicants</li>
+        <li><strong>Automation:</strong> Automatically provision schools upon approval</li>
+      </ul>
+      
+      <h3>1.3 User Flow</h3>
+      <ol>
+        <li>Platform admin logs into EK-SMS admin panel</li>
+        <li>Dashboard shows overview statistics and recent applications</li>
+        <li>Admin navigates to full applications list with filters</li>
+        <li>Admin clicks on an application to review details</li>
+        <li>Admin performs action: Request Info, Approve, or Reject</li>
+        <li>System automatically handles downstream processes (emails, provisioning, etc.)</li>
+      </ol>
+      
+      <div class="callout callout-info">
+        <strong>Note:</strong> This feature assumes applications have already completed the dual verification process (applicant email + principal confirmation) and are in "Pending Review" status.
+      </div>
+    </section>
+    
+    <!-- Section 2: Actors -->
+    <section id="actors">
+      <h2>2. Actors & Permissions</h2>
+      
+      <h3>2.1 Platform Admin</h3>
+      <p>The primary user of this feature. Platform admins are EK-SMS team members responsible for reviewing and approving school applications.</p>
+      
+      <h4>Permissions:</h4>
+      <ul>
+        <li>View all school applications regardless of status</li>
+        <li>Filter and search applications</li>
+        <li>View complete application details</li>
+        <li>Start review (change status to "Under Review")</li>
+        <li>Request more information from applicants</li>
+        <li>Approve applications (triggers school provisioning)</li>
+        <li>Reject applications with reason</li>
+        <li>Add internal notes (visible only to other admins)</li>
+        <li>View audit trail of all actions</li>
+      </ul>
+      
+      <div class="callout callout-warning">
+        <strong>Access Control:</strong> Only users with role "platform_admin" can access this dashboard. This is enforced at the API level with middleware authentication.
+      </div>
+    </section>
+    
+    <!-- Section 3: Dashboard View -->
+    <section id="dashboard-view">
+      <h2>3. Dashboard View</h2>
+      
+      <h3>3.1 Overview Statistics</h3>
+      <p>The dashboard displays key metrics at a glance:</p>
+      
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th>Stat Card</th>
+            <th>Description</th>
+            <th>Clickable</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Pending Review</strong></td>
+            <td>Count of applications awaiting admin action</td>
+            <td>✓ Yes</td>
+            <td>Filters list to show only "Pending Review" status</td>
+          </tr>
+          <tr>
+            <td><strong>Under Review</strong></td>
+            <td>Count of applications currently being reviewed</td>
+            <td>✓ Yes</td>
+            <td>Filters list to show only "Under Review" status</td>
+          </tr>
+          <tr>
+            <td><strong>More Info Requested</strong></td>
+            <td>Count waiting for applicant response</td>
+            <td>✓ Yes</td>
+            <td>Filters list to show only "More Info Requested" status</td>
+          </tr>
+          <tr>
+            <td><strong>This Month</strong></td>
+            <td>Total applications received this month</td>
+            <td>✗ No</td>
+            <td>Informational only</td>
+          </tr>
+          <tr>
+            <td><strong>Approved (This Week)</strong></td>
+            <td>Count of approved applications this week</td>
+            <td>✓ Yes</td>
+            <td>Filters list to show only "Approved" status</td>
+          </tr>
+          <tr>
+            <td><strong>Avg. Review Time</strong></td>
+            <td>Average days from "Pending Review" to decision</td>
+            <td>✗ No</td>
+            <td>Metric only</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <h3>3.2 Recent Applications Table</h3>
+      <p>Displays the 5 most recent applications with:</p>
+      <ul>
+        <li>School name</li>
+        <li>Location (City, Country)</li>
+        <li>Time since submission</li>
+        <li>Current status badge</li>
+        <li>Action button (Review/Continue/View)</li>
+      </ul>
+      
+      <div class="callout callout-info">
+        <strong>Priority Logic:</strong> Applications in "Pending Review" status for more than 3 days should be visually highlighted (e.g., yellow background) to prevent them from being overlooked.
+      </div>
+    </section>
+    
+    <!-- Section 4: Applications List -->
+    <section id="applications-list">
+      <h2>4. Applications List View</h2>
+      
+      <h3>4.1 Filters & Search</h3>
+      
+      <h4>Search Bar</h4>
+      <ul>
+        <li>Searches across: School name, school email, applicant email, principal email</li>
+        <li>Real-time search (debounced by 500ms)</li>
+        <li>Case-insensitive</li>
+      </ul>
+      
+      <h4>Status Filter</h4>
+      <ul>
+        <li>All Statuses (default)</li>
+        <li>Pending Review</li>
+        <li>Under Review</li>
+        <li>More Info Requested</li>
+        <li>Approved</li>
+        <li>Rejected</li>
+        <li>Expired</li>
+      </ul>
+      
+      <h4>Country Filter</h4>
+      <ul>
+        <li>All Countries (default)</li>
+        <li>Dynamically populated from available countries in applications</li>
+      </ul>
+      
+      <h4>Sort Options</h4>
+      <ul>
+        <li>Newest First (default) - By <code>submitted_at DESC</code></li>
+        <li>Oldest First - By <code>submitted_at ASC</code></li>
+        <li>Name (A-Z) - By <code>school_name ASC</code></li>
+        <li>Name (Z-A) - By <code>school_name DESC</code></li>
+      </ul>
+      
+      <div class="callout callout-success">
+        <strong>Best Practice:</strong> Default sort should be "Oldest First" to ensure no application gets stuck in the queue. Admins should process applications in FIFO order.
+      </div>
+      
+      <h3>4.2 Applications Table</h3>
+      
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>Description</th>
+            <th>Sortable</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>School Name</strong></td>
+            <td>Official school name</td>
+            <td>✓ Yes</td>
+          </tr>
+          <tr>
+            <td><strong>Location</strong></td>
+            <td>City, Country Code</td>
+            <td>✗ No</td>
+          </tr>
+          <tr>
+            <td><strong>Type</strong></td>
+            <td>Public, Private, Mission, etc.</td>
+            <td>✗ No</td>
+          </tr>
+          <tr>
+            <td><strong>Students</strong></td>
+            <td>Population range</td>
+            <td>✗ No</td>
+          </tr>
+          <tr>
+            <td><strong>Submitted</strong></td>
+            <td>Date + relative time (e.g., "2 hours ago")</td>
+            <td>✓ Yes (default)</td>
+          </tr>
+          <tr>
+            <td><strong>Status</strong></td>
+            <td>Colored badge showing current status</td>
+            <td>✗ No (use filter instead)</td>
+          </tr>
+          <tr>
+            <td><strong>Actions</strong></td>
+            <td>Button to view/review application</td>
+            <td>✗ No</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <h3>4.3 Pagination</h3>
+      <ul>
+        <li>Display 20 applications per page</li>
+        <li>Show page numbers (1, 2, 3, ...) with Previous/Next buttons</li>
+        <li>Display total count: "Applications (47 total)"</li>
+      </ul>
+      
+      <h3>4.4 Export Functionality</h3>
+      <p>Export button generates CSV file with all filtered applications containing:</p>
+      <ul>
+        <li>All application fields</li>
+        <li>Current status</li>
+        <li>Submission timestamp</li>
+        <li>Last updated timestamp</li>
+      </ul>
+    </section>
+    
+    <!-- Section 5: Application Detail -->
+    <section id="application-detail">
+      <h2>5. Application Detail View</h2>
+      
+      <h3>5.1 Application Header</h3>
+      <ul>
+        <li>School name as page title</li>
+        <li>Application ID (e.g., APP-2026-001234)</li>
+        <li>Current status badge (large, prominent)</li>
+        <li>Back to list button</li>
+      </ul>
+      
+      <h3>5.2 Verification Status</h3>
+      <p>Display verification badges:</p>
+      <ul>
+        <li>✓ Applicant Verified (green badge)</li>
+        <li>✓ Principal Confirmed (green badge) OR ℹ️ Applicant is Principal (blue info)</li>
+      </ul>
+      
+      <h3>5.3 Timeline</h3>
+      <p>Visual timeline showing application progress:</p>
+      <ul>
+        <li>Application Submitted</li>
+        <li>Applicant Email Verified</li>
+        <li>Principal Confirmed (if applicable)</li>
+        <li>Moved to Review Queue</li>
+        <li>Review Started (if under review)</li>
+        <li>Decision Made (if approved/rejected)</li>
+      </ul>
+      <p>Each event shows timestamp and actor (system or admin name).</p>
+      
+      <h3>5.4 Application Information Sections</h3>
+      
+      <p>All information is organized into collapsible sections:</p>
+      
+      <h4>School Information</h4>
+      <ul>
+        <li>School Name</li>
+        <li>Year Established</li>
+        <li>School Type</li>
+        <li>Student Population</li>
+      </ul>
+      
+      <h4>Location</h4>
+      <ul>
+        <li>Country</li>
+        <li>City</li>
+        <li>Full Address</li>
+      </ul>
+      
+      <h4>Contact Information</h4>
+      <ul>
+        <li>School Phone</li>
+        <li>School Email</li>
+        <li>Principal Name</li>
+        <li>Principal Email (linked - click to email)</li>
+        <li>Principal Phone</li>
+      </ul>
+      
+      <h4>Applicant & Admin Designation</h4>
+      <ul>
+        <li>Applicant Name & Role (or "Applicant is Principal" notice)</li>
+        <li>Applicant Email</li>
+        <li>Applicant Phone (if different from principal)</li>
+        <li>Designated School Admin (who will get admin account)</li>
+      </ul>
+      
+      <h4>Additional Details</h4>
+      <ul>
+        <li>Why EK-SMS? (selected reasons)</li>
+        <li>Other reason (free text if provided)</li>
+        <li>Online Presence (list of links)</li>
+      </ul>
+      
+      <h3>5.5 Internal Notes Section</h3>
+      <div class="callout callout-warning">
+        <strong>Admin Only:</strong> Internal notes are only visible to platform administrators. They are never shown to applicants.
+      </div>
+      
+      <p>Features:</p>
+      <ul>
+        <li>Display all notes in reverse chronological order (newest first)</li>
+        <li>Each note shows: Author name, timestamp, note content</li>
+        <li>Text area for adding new notes</li>
+        <li>"Save Note" button</li>
+        <li>Notes are stored in JSON array in <code>internal_notes</code> field</li>
+      </ul>
+      
+      <h3>5.6 Action Buttons</h3>
+      <p>Three primary action buttons displayed at the bottom:</p>
+      <ul>
+        <li><strong>Request More Info</strong> (yellow/warning button)</li>
+        <li><strong>Reject Application</strong> (red/danger button)</li>
+        <li><strong>Approve Application</strong> (green/success button)</li>
+      </ul>
+      
+      <div class="callout callout-info">
+        <strong>Button Visibility:</strong> If application status is "Approved" or "Rejected", action buttons should be hidden. Display message: "This application has already been [approved/rejected] on [date]."
+      </div>
+    </section>
+    
+    <!-- Section 6: Admin Actions -->
+    <section id="admin-actions">
+      <h2>6. Admin Actions & Workflows</h2>
+      
+      <h3>6.1 Start Review</h3>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Trigger:</div>
+        Admin opens an application in "Pending Review" status
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Action:</div>
+        <ul>
+          <li>Status changes from "Pending Review" → "Under Review"</li>
+          <li><code>reviewed_by</code> field set to admin's user ID</li>
+          <li><code>reviewed_at</code> timestamp set to current time</li>
+        </ul>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Result:</div>
+        Application is now locked to this admin (prevents multiple admins reviewing same app)
+      </div>
+      
+      <div class="callout callout-info">
+        <strong>Note:</strong> Status change happens automatically when admin opens detail view, not requiring explicit "Start Review" button.
+      </div>
+      
+      <h3>6.2 Request More Information</h3>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Trigger:</div>
+        Admin clicks "Request More Info" button
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Modal Opens:</div>
+        <ul>
+          <li>Title: "Request More Information"</li>
+          <li>Message field (required, multiline textarea)</li>
+          <li>Warning: "The applicant will receive an email with your message"</li>
+          <li>Cancel button</li>
+          <li>Send Request button</li>
+        </ul>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Backend Process:</div>
+        <ol>
+          <li>Status changes to "More Info Requested"</li>
+          <li>Admin's message stored in <code>decision_reason</code> field</li>
+          <li>Email sent to applicant with admin's message</li>
+          <li>Timeline updated with event</li>
+        </ol>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Result:</div>
+        Application moved to "More Info Requested" queue. Applicant must respond via email (handled manually for MVP).
+      </div>
+      
+      <div class="callout callout-warning">
+        <strong>MVP Limitation:</strong> Applicant response is handled via email reply. Future versions may include a web form for applicants to submit additional information directly in the system.
+      </div>
+      
+      <h3>6.3 Approve Application</h3>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Trigger:</div>
+        Admin clicks "Approve Application" button
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Modal Opens:</div>
+        <ul>
+          <li>Title: "Approve Application"</li>
+          <li>Success message: "Ready to approve!"</li>
+          <li>Summary of what will be created:
+            <ul>
+              <li>School Tenant: [School Name]</li>
+              <li>Admin Account: [Admin Name] ([Admin Email])</li>
+              <li>Temporary Password: Will be generated</li>
+              <li>Welcome Email: Will be sent</li>
+            </ul>
+          </li>
+          <li>Info callout: Admin must change password + set up 2FA on first login</li>
+          <li>Cancel button</li>
+          <li>Approve & Create School button</li>
+        </ul>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Backend Process (School Provisioning):</div>
+        <ol>
+          <li>Create school record in <code>schools</code> table</li>
+          <li>Create admin user in <code>users</code> table</li>
+          <li>Generate secure temporary password (16 characters, alphanumeric + symbols)</li>
+          <li>Set user flags: <code>must_change_password=true</code>, <code>must_setup_2fa=true</code></li>
+          <li>Send welcome email with credentials</li>
+          <li>Update application status to "Approved"</li>
+          <li>Set <code>reviewed_at</code> to current timestamp</li>
+        </ol>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Result:</div>
+        <ul>
+          <li>School is live on EK-SMS</li>
+          <li>Admin can log in and start configuring the system</li>
+          <li>Application marked as "Approved"</li>
+        </ul>
+      </div>
+      
+      <h3>6.4 Reject Application</h3>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Trigger:</div>
+        Admin clicks "Reject Application" button
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Modal Opens:</div>
+        <ul>
+          <li>Title: "Reject Application"</li>
+          <li>Warning: "This action will permanently reject the application. The school can reapply after 30 days."</li>
+          <li>Quick-select reasons (optional):
+            <ul>
+              <li>Incomplete information</li>
+              <li>Unable to verify school</li>
+              <li>Duplicate application</li>
+              <li>Does not meet requirements</li>
+            </ul>
+          </li>
+          <li>Rejection reason textarea (required, min 20 characters)</li>
+          <li>Cancel button</li>
+          <li>Reject Application button (red, danger style)</li>
+        </ul>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Backend Process:</div>
+        <ol>
+          <li>Status changes to "Rejected"</li>
+          <li>Rejection reason stored in <code>decision_reason</code> field</li>
+          <li>Set <code>reviewed_at</code> to current timestamp</li>
+          <li>Send rejection email to applicant with reason</li>
+          <li>Timeline updated with rejection event</li>
+        </ol>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Result:</div>
+        Application marked as rejected. School can reapply after 30 days (enforced in registration form by checking applicant email + school name + city combination).
+      </div>
+      
+      <h3>6.5 Add Internal Note</h3>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Trigger:</div>
+        Admin types in note textarea and clicks "Save Note"
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Backend Process:</div>
+        <ol>
+          <li>Create note object: <code>{ note: "text", created_by: admin_id, created_at: timestamp }</code></li>
+          <li>Append to <code>internal_notes</code> JSON array</li>
+          <li>Save application</li>
+        </ol>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Result:</div>
+        Note visible to all admins in notes section
+      </div>
+    </section>
+    
+    <!-- Section 7: Database Schema -->
+    <section id="database-schema">
+      <h2>7. Database Schema Updates</h2>
+      
+      <h3>7.1 New Field: internal_notes</h3>
+      
+      <p>Add new column to <code>school_applications</code> table:</p>
+      
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>Type</th>
+            <th>Nullable</th>
+            <th>Default</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>internal_notes</code></td>
+            <td>JSONB</td>
+            <td>Yes</td>
+            <td>NULL</td>
+            <td>Array of admin notes, each containing: note text, admin ID, timestamp</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <h4>Note Structure:</h4>
+      <pre style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; overflow-x: auto;">
+{
+  "internal_notes": [
+    {
+      "note": "Application looks complete. All docs verified.",
+      "created_by": "uuid-of-admin",
+      "created_at": "2026-01-14T12:30:00Z"
+    },
+    {
+      "note": "Called principal to verify. Everything checks out.",
+      "created_by": "uuid-of-admin",
+      "created_at": "2026-01-14T14:15:00Z"
+    }
+  ]
+}
+      </pre>
+      
+      <h3>7.2 Existing Fields Used</h3>
+      <p>These fields already exist in the <code>school_applications</code> table and will be utilized:</p>
+      
+      <table class="field-table">
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>Type</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>reviewed_at</code></td>
+            <td>DateTime</td>
+            <td>Timestamp when admin started review or made decision</td>
+          </tr>
+          <tr>
+            <td><code>reviewed_by</code></td>
+            <td>UUID (FK to users)</td>
+            <td>ID of admin who reviewed/is reviewing the application</td>
+          </tr>
+          <tr>
+            <td><code>decision_reason</code></td>
+            <td>Text</td>
+            <td>Used for rejection reason or "more info" request message</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <h3>7.3 Migration Script</h3>
+      <p>Alembic migration to add <code>internal_notes</code> field:</p>
+      
+      <pre style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; overflow-x: auto;">
+"""Add internal_notes to school_applications
+
+Revision ID: xxxxx
+"""
+
+from alembic import op
+import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
+
+def upgrade():
+    op.add_column(
+        'school_applications',
+        sa.Column('internal_notes', postgresql.JSONB, nullable=True)
+    )
+
+def downgrade():
+    op.drop_column('school_applications', 'internal_notes')
+      </pre>
+    </section>
+    
+    <!-- Section 8: School Provisioning -->
+    <section id="school-provisioning">
+      <h2>8. School Provisioning Process</h2>
+      
+      <h3>8.1 Overview</h3>
+      <p>When an application is approved, the system must automatically create the school tenant and admin account. This is a critical process that must be atomic (all-or-nothing) to prevent partial creation.</p>
+      
+      <h3>8.2 Provisioning Steps</h3>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Step 1: Create School Record</div>
+        <p>Insert into <code>schools</code> table:</p>
+        <ul>
+          <li><code>id</code>: UUID (generated)</li>
+          <li><code>name</code>: From application.school_name</li>
+          <li><code>school_type</code>: From application.school_type</li>
+          <li><code>country_code</code>: From application.country_code</li>
+          <li><code>city</code>: From application.city</li>
+          <li><code>address</code>: From application.address</li>
+          <li><code>phone</code>: From application.school_phone</li>
+          <li><code>email</code>: From application.school_email</li>
+          <li><code>year_established</code>: From application.year_established</li>
+          <li><code>student_population</code>: From application.student_population</li>
+          <li><code>status</code>: "active"</li>
+          <li><code>created_at</code>: Current timestamp</li>
+        </ul>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Step 2: Create Admin User</div>
+        <p>Insert into <code>users</code> table:</p>
+        <ul>
+          <li><code>id</code>: UUID (generated)</li>
+          <li><code>school_id</code>: From newly created school</li>
+          <li><code>email</code>: Based on admin_choice (applicant or principal email)</li>
+          <li><code>name</code>: Based on admin_choice (applicant or principal name)</li>
+          <li><code>phone</code>: Based on admin_choice</li>
+          <li><code>role</code>: "school_admin"</li>
+          <li><code>password_hash</code>: Hash of generated temp password</li>
+          <li><code>must_change_password</code>: TRUE</li>
+          <li><code>must_setup_2fa</code>: TRUE</li>
+          <li><code>is_active</code>: TRUE</li>
+          <li><code>created_at</code>: Current timestamp</li>
+        </ul>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Step 3: Generate Temporary Password</div>
+        <ul>
+          <li>Length: 16 characters</li>
+          <li>Complexity: Uppercase, lowercase, numbers, symbols</li>
+          <li>Cryptographically secure random generation</li>
+          <li>Example: <code>Kx9#mP2$vL5@nQ8!</code></li>
+        </ul>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Step 4: Send Welcome Email</div>
+        <p>Email to admin with:</p>
+        <ul>
+          <li>Congratulations message</li>
+          <li>Login URL: https://app.eksms.dev</li>
+          <li>Email address (their email)</li>
+          <li>Temporary password</li>
+          <li>Instructions for first login (password change + 2FA setup)</li>
+          <li>Link to getting started guide</li>
+        </ul>
+      </div>
+      
+      <div class="workflow-step">
+        <div class="workflow-step-title">Step 5: Update Application</div>
+        <ul>
+          <li>Set <code>status</code> to "Approved"</li>
+          <li>Set <code>reviewed_at</code> to current timestamp</li>
+          <li>Link application to school: <code>school_id</code> field (if we add it)</li>
+        </ul>
+      </div>
+      
+      <h3>8.3 Transaction Handling</h3>
+      <div class="callout callout-danger">
+        <strong>Critical:</strong> All provisioning steps must occur within a database transaction. If any step fails, the entire process must rollback. This prevents orphaned schools or users.
+      </div>
+      
+      <h3>8.4 Error Handling</h3>
+      <p>If provisioning fails:</p>
+      <ul>
+        <li>Rollback all database changes</li>
+        <li>Application status remains "Under Review"</li>
+        <li>Log detailed error for debugging</li>
+        <li>Show error message to admin: "Failed to create school. Please try again or contact support."</li>
+        <li>Add automatic internal note with error details</li>
+      </ul>
+    </section>
+    
+    <!-- Section 9: Email Templates -->
+    <section id="email-templates">
+      <h2>9. Email Templates</h2>
+      
+      <h3>9.1 More Information Requested</h3>
+      <div class="email-template">
+        <div class="email-header">
+          <div class="email-subject">Subject: Additional information needed for your EK-SMS application</div>
+        </div>
+        <div class="email-body">
+Hello <span class="placeholder">{applicant_name}</span>,
+
+Thank you for your application to register <span class="placeholder">{school_name}</span> on EK-SMS.
+
+Our team needs some additional information to process your application:
+
+<span class="placeholder">{admin_message}</span>
+
+Please reply to this email with the requested information, and we'll continue processing your application.
+
+If you have any questions, feel free to contact us at support@eksms.dev.
+
+Best regards,
+The EK-SMS Team
+        </div>
+      </div>
+      
+      <h3>9.2 Application Approved</h3>
+      <div class="email-template">
+        <div class="email-header">
+          <div class="email-subject">Subject: 🎉 Welcome to EK-SMS! Your school is approved</div>
+        </div>
+        <div class="email-body">
+Dear <span class="placeholder">{admin_name}</span>,
+
+Congratulations! Your application for <span class="placeholder">{school_name}</span> has been approved.
+
+Your school is now registered on EK-SMS. Here are your login credentials:
+
+<strong>Login URL:</strong> https://app.eksms.dev
+<strong>Email:</strong> <span class="placeholder">{admin_email}</span>
+<strong>Temporary Password:</strong> <span class="placeholder">{temp_password}</span>
+
+<strong>Important:</strong> You will be required to change your password on first login.
+
+<strong>Getting Started:</strong>
+1. Log in with the credentials above
+2. Change your password
+3. Set up two-factor authentication (required for admin accounts)
+4. Configure your school settings
+5. Start adding teachers and students
+
+If you need help getting started, check out our guide at https://docs.eksms.dev or contact support@eksms.dev.
+
+Welcome aboard!
+
+Best regards,
+The EK-SMS Team
+        </div>
+      </div>
+      
+      <h3>9.3 Application Rejected</h3>
+      <div class="email-template">
+        <div class="email-header">
+          <div class="email-subject">Subject: Update on your EK-SMS application</div>
+        </div>
+        <div class="email-body">
+Hello <span class="placeholder">{applicant_name}</span>,
+
+Thank you for your interest in EK-SMS. After reviewing your application for <span class="placeholder">{school_name}</span>, we're unable to approve it at this time.
+
+<strong>Reason:</strong>
+<span class="placeholder">{rejection_reason}</span>
+
+If you believe this decision was made in error or if you can address the above concerns, you may submit a new application after 30 days.
+
+If you have questions, please contact us at support@eksms.dev.
+
+Best regards,
+The EK-SMS Team
+        </div>
+      </div>
+    </section>
+    
+    <!-- Section 10: Edge Cases -->
+    <section id="edge-cases">
+      <h2>10. Edge Cases & Business Rules</h2>
+      
+      <div class="decision-box">
+        <h4>Multiple admins reviewing same application</h4>
+        <p><strong>Decision:</strong> When an admin opens an application in "Pending Review" status, it automatically transitions to "Under Review" and <code>reviewed_by</code> is set. Other admins can still view it, but a warning banner appears: "This application is currently being reviewed by [Admin Name]."</p>
+      </div>
+      
+      <div class="decision-box">
+        <h4>Admin requests more info multiple times</h4>
+        <p><strong>Decision:</strong> Allowed. Each request overwrites the <code>decision_reason</code> field and sends a new email. Previous requests are not tracked (for MVP). Future enhancement: Store all requests in a history array.</p>
+      </div>
+      
+      <div class="decision-box">
+        <h4>Applicant responds to "More Info" request</h4>
+        <p><strong>Decision:</strong> For MVP, applicant responds via email reply (manual process). Admin reads email and then either approves or rejects. Future enhancement: Web form for applicants to submit additional info directly.</p>
+      </div>
+      
+      <div class="decision-box">
+        <h4>School provisioning fails after approval</h4>
+        <p><strong>Decision:</strong> Transaction rolls back. Application status remains "Under Review". Error logged. Admin shown error message with option to retry. Internal note automatically added with error details.</p>
+      </div>
+      
+      <div class="decision-box">
+        <h4>Email delivery fails for approval/rejection</h4>
+        <p><strong>Decision:</strong> Email failure should not block the operation. School/user is still created (for approval). Log the email failure. Admin can manually resend welcome email from admin panel. Consider implementing email queue with retries for production.</p>
+      </div>
+      
+      <div class="decision-box">
+        <h4>Admin accidentally approves wrong application</h4>
+        <p><strong>Decision:</strong> Cannot be undone through UI. Admin must contact technical support to manually deactivate the school and user. For MVP, no "undo" functionality. Future enhancement: Add "Deactivate School" feature.</p>
+      </div>
+      
+      <div class="decision-box">
+        <h4>Application in "More Info Requested" for 30+ days</h4>
+        <p><strong>Decision:</strong> Manual follow-up required for MVP. Admin should periodically check these applications and either reject or approve based on communication. Future enhancement: Automated reminder emails or auto-rejection after 30 days.</p>
+      </div>
+      
+      <div class="decision-box">
+        <h4>Same school applies multiple times with different names</h4>
+        <p><strong>Decision:</strong> Detection relies on admin review. No automated duplicate detection beyond school name + city (already implemented in registration). Admin should check location and contact details to identify duplicates and reject accordingly.</p>
+      </div>
+    </section>
+    
+    <!-- Section 11: Security -->
+    <section id="security">
+      <h2>11. Security Considerations</h2>
+      
+      <h3>11.1 Authentication & Authorization</h3>
+      <ul>
+        <li><strong>Middleware:</strong> All admin endpoints must be protected by authentication middleware</li>
+        <li><strong>Role Check:</strong> Verify user has <code>role="platform_admin"</code></li>
+        <li><strong>JWT Tokens:</strong> Use secure JWT with short expiration (1 hour)</li>
+        <li><strong>Refresh Tokens:</strong> Implement refresh token mechanism for extended sessions</li>
+      </ul>
+      
+      <h3>11.2 Audit Trail</h3>
+      <p>Log all admin actions to <code>audit_logs</code> table:</p>
+      <ul>
+        <li>Action type (view, start_review, request_info, approve, reject, add_note)</li>
+        <li>Admin user ID</li>
+        <li>Application ID</li>
+        <li>Timestamp</li>
+        <li>IP address</li>
+        <li>Before/after state (for status changes)</li>
+      </ul>
+      
+      <h3>11.3 Sensitive Data</h3>
+      <ul>
+        <li><strong>Temporary Passwords:</strong> Never log or store unhashed. Generate, hash, send via email, then discard plain text</li>
+        <li><strong>Email Addresses:</strong> Validate format on frontend and backend</li>
+        <li><strong>Internal Notes:</strong> Never exposed in public APIs. Only admin endpoints return this field</li>
+      </ul>
+      
+      <h3>11.4 Rate Limiting</h3>
+      <ul>
+        <li>List endpoint: 60 requests per minute per admin</li>
+        <li>Detail endpoint: 100 requests per minute per admin</li>
+        <li>Action endpoints (approve, reject, etc.): 10 requests per minute per admin</li>
+      </ul>
+      
+      <h3>11.5 Input Validation</h3>
+      <ul>
+        <li>Rejection reason: Required, min 20 characters, max 1000 characters</li>
+        <li>More info message: Required, min 10 characters, max 1000 characters</li>
+        <li>Internal note: Required, min 1 character, max 2000 characters</li>
+        <li>All text inputs: Strip HTML tags, prevent XSS</li>
+      </ul>
+      
+      <div class="callout callout-danger">
+        <strong>Critical:</strong> Never trust frontend validation alone. All validation must be enforced on the backend.
+      </div>
+    </section>
+    
+    <footer>
+      <p>EK-SMS Admin Review Dashboard Feature Specification</p>
+      <p>Document Version 1.0 • January 2026</p>
+    </footer>
+  </div>
+</body>
+</html>

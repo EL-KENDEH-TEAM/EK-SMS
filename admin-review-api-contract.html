@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EK-SMS - Admin Review Dashboard API Contract</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background-color: #f9fafb;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    
+    header {
+      margin-bottom: 48px;
+      padding-bottom: 24px;
+      border-bottom: 3px solid #1a365d;
+    }
+    
+    .logo {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a365d;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #1a365d;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      font-size: 16px;
+      color: #6b7280;
+    }
+    
+    .meta {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    
+    .meta span {
+      margin-right: 24px;
+    }
+    
+    .base-url {
+      background-color: #f0fdf4;
+      border: 2px solid #22c55e;
+      color: #166534;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      margin-top: 16px;
+      font-weight: 600;
+    }
+    
+    .toc {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 40px;
+    }
+    
+    .toc h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #374151;
+    }
+    
+    .toc ol {
+      padding-left: 24px;
+    }
+    
+    .toc li {
+      margin-bottom: 8px;
+    }
+    
+    .toc a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    
+    .toc a:hover {
+      text-decoration: underline;
+    }
+    
+    section {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #1a365d;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      color: #374151;
+      margin-top: 28px;
+      margin-bottom: 12px;
+    }
+    
+    h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #4b5563;
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+    
+    p {
+      margin-bottom: 16px;
+      color: #4b5563;
+    }
+    
+    ul, ol {
+      margin-bottom: 16px;
+      padding-left: 24px;
+      color: #4b5563;
+    }
+    
+    li {
+      margin-bottom: 8px;
+    }
+    
+    .endpoint {
+      background-color: white;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f3f4f6;
+    }
+    
+    .http-method {
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .method-get {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .method-post {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .method-patch {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+    
+    .method-delete {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .endpoint-path {
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      flex: 1;
+    }
+    
+    .auth-required {
+      background-color: #fef3c7;
+      color: #92400e;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .endpoint-description {
+      color: #4b5563;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    
+    .code-block {
+      background-color: #1f2937;
+      color: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 16px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    
+    .code-block pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    .json-key {
+      color: #60a5fa;
+    }
+    
+    .json-string {
+      color: #34d399;
+    }
+    
+    .json-number {
+      color: #fbbf24;
+    }
+    
+    .json-boolean {
+      color: #f472b6;
+    }
+    
+    .param-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    
+    .param-table th {
+      text-align: left;
+      padding: 12px;
+      background-color: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .param-table td {
+      padding: 12px;
+      border: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+    
+    .param-table tr:hover {
+      background-color: #f9fafb;
+    }
+    
+    .param-name {
+      font-family: 'Courier New', monospace;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    .param-type {
+      font-family: 'Courier New', monospace;
+      color: #6b7280;
+      font-size: 12px;
+    }
+    
+    .required-badge {
+      background-color: #fee2e2;
+      color: #991b1b;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    
+    .optional-badge {
+      background-color: #e0e7ff;
+      color: #3730a3;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    
+    .response-section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    .status-code {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-weight: 700;
+      font-size: 13px;
+      margin-right: 12px;
+    }
+    
+    .status-200 {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .status-201 {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .status-400 {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+    
+    .status-401 {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .status-403 {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .status-404 {
+      background-color: #fce7f3;
+      color: #9d174d;
+    }
+    
+    .status-409 {
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+    
+    .status-500 {
+      background-color: #f3f4f6;
+      color: #374151;
+    }
+    
+    .callout {
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+    
+    .callout-info {
+      background-color: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      color: #1e40af;
+    }
+    
+    .callout-warning {
+      background-color: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      color: #92400e;
+    }
+    
+    .callout-danger {
+      background-color: #fef2f2;
+      border-left: 4px solid #ef4444;
+      color: #991b1b;
+    }
+    
+    .schema-box {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+    
+    .schema-title {
+      font-weight: 600;
+      color: #1f2937;
+      margin-bottom: 12px;
+      font-size: 15px;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">EK-SMS</div>
+      <h1>Admin Review Dashboard API Contract</h1>
+      <p class="subtitle">API endpoints for platform admin review and school provisioning</p>
+      <div class="meta">
+        <span>Version: 1.0</span>
+        <span>Last Updated: January 2026</span>
+        <span>Module: school_applications (admin endpoints)</span>
+      </div>
+      <div class="base-url">
+        Base URL: /admin/applications
+      </div>
+    </header>
+    
+    <!-- Table of Contents -->
+    <nav class="toc">
+      <h2>Endpoints Overview</h2>
+      <ol>
+        <li><a href="#list-applications">GET /admin/applications - List Applications</a></li>
+        <li><a href="#get-stats">GET /admin/applications/stats - Dashboard Statistics</a></li>
+        <li><a href="#get-application">GET /admin/applications/{id} - Get Application Details</a></li>
+        <li><a href="#start-review">POST /admin/applications/{id}/review - Start Review</a></li>
+        <li><a href="#request-info">POST /admin/applications/{id}/request-info - Request More Information</a></li>
+        <li><a href="#approve">POST /admin/applications/{id}/approve - Approve Application</a></li>
+        <li><a href="#reject">POST /admin/applications/{id}/reject - Reject Application</a></li>
+        <li><a href="#add-note">POST /admin/applications/{id}/notes - Add Internal Note</a></li>
+        <li><a href="#schemas">Schemas & Types</a></li>
+        <li><a href="#errors">Error Responses</a></li>
+      </ol>
+    </nav>
+    
+    <!-- Authentication Section -->
+    <section>
+      <h2>Authentication & Authorization</h2>
+      
+      <div class="callout callout-warning">
+        <strong>All endpoints require authentication.</strong> Include JWT token in Authorization header: <code>Authorization: Bearer {token}</code>
+      </div>
+      
+      <h3>Required Role</h3>
+      <p>Only users with <code>role="platform_admin"</code> can access these endpoints. Requests from other roles will receive a 403 Forbidden response.</p>
+      
+      <h3>Rate Limiting</h3>
+      <ul>
+        <li><strong>List endpoint:</strong> 60 requests per minute per admin</li>
+        <li><strong>Detail endpoint:</strong> 100 requests per minute per admin</li>
+        <li><strong>Action endpoints:</strong> 10 requests per minute per admin</li>
+      </ul>
+    </section>
+    
+    <!-- Endpoint 1: List Applications -->
+    <section id="list-applications">
+      <h2>1. List Applications</h2>
+      
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="http-method method-get">GET</span>
+          <span class="endpoint-path">/admin/applications</span>
+          <span class="auth-required">🔒 Auth Required</span>
+        </div>
+        
+        <p class="endpoint-description">
+          Retrieve a paginated list of school applications with filtering, searching, and sorting capabilities.
+        </p>
+        
+        <h4>Query Parameters</h4>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">skip</span></td>
+              <td><span class="param-type">integer</span></td>
+              <td><span class="optional-badge">Optional</span></td>
+              <td>Number of records to skip for pagination. Default: 0</td>
+            </tr>
+            <tr>
+              <td><span class="param-name">limit</span></td>
+              <td><span class="param-type">integer</span></td>
+              <td><span class="optional-badge">Optional</span></td>
+              <td>Maximum number of records to return (1-100). Default: 20</td>
+            </tr>
+            <tr>
+              <td><span class="param-name">status</span></td>
+              <td><span class="param-type">string</span></td>
+              <td><span class="optional-badge">Optional</span></td>
+              <td>Filter by application status. Values: pending_review, under_review, more_info_requested, approved, rejected, expired</td>
+            </tr>
+            <tr>
+              <td><span class="param-name">country_code</span></td>
+              <td><span class="param-type">string</span></td>
+              <td><span class="optional-badge">Optional</span></td>
+              <td>Filter by country code (2 letters). Example: LR, SL, GH</td>
+            </tr>
+            <tr>
+              <td><span class="param-name">search</span></td>
+              <td><span class="param-type">string</span></td>
+              <td><span class="optional-badge">Optional</span></td>
+              <td>Search across school name, school email, applicant email, principal email</td>
+            </tr>
+            <tr>
+              <td><span class="param-name">sort_by</span></td>
+              <td><span class="param-type">string</span></td>
+              <td><span class="optional-badge">Optional</span></td>
+              <td>Field to sort by. Values: submitted_at, school_name. Default: submitted_at</td>
+            </tr>
+            <tr>
+              <td><span class="param-name">sort_order</span></td>
+              <td><span class="param-type">string</span></td>
+              <td><span class="optional-badge">Optional</span></td>
+              <td>Sort order. Values: asc, desc. Default: asc (oldest first for fairness)</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4>Example Request</h4>
+        <div class="code-block">
+          <pre>GET /admin/applications?status=pending_review&limit=20&sort_order=asc</pre>
+        </div>
+        
+        <div class="response-section">
+          <h4>Success Response</h4>
+          <p><span class="status-code status-200">200 OK</span></p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"applications"</span>: [
+    {
+      <span class="json-key">"id"</span>: <span class="json-string">"123e4567-e89b-12d3-a456-426614174000"</span>,
+      <span class="json-key">"school_name"</span>: <span class="json-string">"Monrovia Central High School"</span>,
+      <span class="json-key">"school_type"</span>: <span class="json-string">"public"</span>,
+      <span class="json-key">"student_population"</span>: <span class="json-string">"300_to_500"</span>,
+      <span class="json-key">"country_code"</span>: <span class="json-string">"LR"</span>,
+      <span class="json-key">"city"</span>: <span class="json-string">"Monrovia"</span>,
+      <span class="json-key">"status"</span>: <span class="json-string">"pending_review"</span>,
+      <span class="json-key">"submitted_at"</span>: <span class="json-string">"2026-01-14T10:23:00Z"</span>,
+      <span class="json-key">"applicant_verified_at"</span>: <span class="json-string">"2026-01-14T10:45:00Z"</span>,
+      <span class="json-key">"principal_confirmed_at"</span>: <span class="json-string">"2026-01-14T11:12:00Z"</span>,
+      <span class="json-key">"reviewed_at"</span>: <span class="json-boolean">null</span>,
+      <span class="json-key">"reviewed_by"</span>: <span class="json-boolean">null</span>
+    }
+  ],
+  <span class="json-key">"total"</span>: <span class="json-number">47</span>,
+  <span class="json-key">"skip"</span>: <span class="json-number">0</span>,
+  <span class="json-key">"limit"</span>: <span class="json-number">20</span>
+}</pre>
+          </div>
+        </div>
+        
+        <div class="response-section">
+          <h4>Error Responses</h4>
+          <p><span class="status-code status-401">401 Unauthorized</span> - Missing or invalid authentication token</p>
+          <p><span class="status-code status-403">403 Forbidden</span> - User does not have platform_admin role</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Endpoint 2: Dashboard Stats -->
+    <section id="get-stats">
+      <h2>2. Dashboard Statistics</h2>
+      
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="http-method method-get">GET</span>
+          <span class="endpoint-path">/admin/applications/stats</span>
+          <span class="auth-required">🔒 Auth Required</span>
+        </div>
+        
+        <p class="endpoint-description">
+          Get aggregated statistics for the admin dashboard overview cards.
+        </p>
+        
+        <div class="response-section">
+          <h4>Success Response</h4>
+          <p><span class="status-code status-200">200 OK</span></p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"pending_review"</span>: <span class="json-number">12</span>,
+  <span class="json-key">"under_review"</span>: <span class="json-number">5</span>,
+  <span class="json-key">"more_info_requested"</span>: <span class="json-number">3</span>,
+  <span class="json-key">"approved_this_week"</span>: <span class="json-number">8</span>,
+  <span class="json-key">"total_this_month"</span>: <span class="json-number">28</span>,
+  <span class="json-key">"avg_review_time_days"</span>: <span class="json-number">2.3</span>
+}</pre>
+          </div>
+        </div>
+        
+        <div class="callout callout-info">
+          <strong>Note:</strong> avg_review_time_days is calculated as the average time between <code>submitted_at</code> and <code>reviewed_at</code> for applications decided in the past 30 days.
+        </div>
+      </div>
+    </section>
+    
+    <!-- Endpoint 3: Get Application Details -->
+    <section id="get-application">
+      <h2>3. Get Application Details</h2>
+      
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="http-method method-get">GET</span>
+          <span class="endpoint-path">/admin/applications/{id}</span>
+          <span class="auth-required">🔒 Auth Required</span>
+        </div>
+        
+        <p class="endpoint-description">
+          Retrieve complete details for a single application including all submitted information, verification status, timeline, and internal notes.
+        </p>
+        
+        <h4>Path Parameters</h4>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">id</span></td>
+              <td><span class="param-type">UUID</span></td>
+              <td>Application ID</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="response-section">
+          <h4>Success Response</h4>
+          <p><span class="status-code status-200">200 OK</span></p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"id"</span>: <span class="json-string">"123e4567-e89b-12d3-a456-426614174000"</span>,
+  <span class="json-key">"school_name"</span>: <span class="json-string">"Monrovia Central High School"</span>,
+  <span class="json-key">"year_established"</span>: <span class="json-number">1985</span>,
+  <span class="json-key">"school_type"</span>: <span class="json-string">"public"</span>,
+  <span class="json-key">"student_population"</span>: <span class="json-string">"300_to_500"</span>,
+  <span class="json-key">"country_code"</span>: <span class="json-string">"LR"</span>,
+  <span class="json-key">"city"</span>: <span class="json-string">"Monrovia"</span>,
+  <span class="json-key">"address"</span>: <span class="json-string">"123 Broad Street, opposite the Capitol Building"</span>,
+  <span class="json-key">"school_phone"</span>: <span class="json-string">"+231 886 123 456"</span>,
+  <span class="json-key">"school_email"</span>: <span class="json-string">"info@mchs.edu.lr"</span>,
+  <span class="json-key">"principal_name"</span>: <span class="json-string">"John D. Smith"</span>,
+  <span class="json-key">"principal_email"</span>: <span class="json-string">"jsmith@mchs.edu.lr"</span>,
+  <span class="json-key">"principal_phone"</span>: <span class="json-string">"+231 886 789 012"</span>,
+  <span class="json-key">"applicant_is_principal"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"applicant_name"</span>: <span class="json-boolean">null</span>,
+  <span class="json-key">"applicant_email"</span>: <span class="json-boolean">null</span>,
+  <span class="json-key">"applicant_phone"</span>: <span class="json-boolean">null</span>,
+  <span class="json-key">"applicant_role"</span>: <span class="json-boolean">null</span>,
+  <span class="json-key">"admin_choice"</span>: <span class="json-string">"principal"</span>,
+  <span class="json-key">"online_presence"</span>: [
+    {
+      <span class="json-key">"type"</span>: <span class="json-string">"website"</span>,
+      <span class="json-key">"url"</span>: <span class="json-string">"https://mchs.edu.lr"</span>
+    }
+  ],
+  <span class="json-key">"reasons"</span>: [<span class="json-string">"transparency"</span>, <span class="json-string">"automation"</span>],
+  <span class="json-key">"other_reason"</span>: <span class="json-string">"We want to ensure accountability in our school operations."</span>,
+  <span class="json-key">"status"</span>: <span class="json-string">"pending_review"</span>,
+  <span class="json-key">"submitted_at"</span>: <span class="json-string">"2026-01-14T10:23:00Z"</span>,
+  <span class="json-key">"applicant_verified_at"</span>: <span class="json-string">"2026-01-14T10:45:00Z"</span>,
+  <span class="json-key">"principal_confirmed_at"</span>: <span class="json-string">"2026-01-14T11:12:00Z"</span>,
+  <span class="json-key">"reviewed_at"</span>: <span class="json-boolean">null</span>,
+  <span class="json-key">"reviewed_by"</span>: <span class="json-boolean">null</span>,
+  <span class="json-key">"decision_reason"</span>: <span class="json-boolean">null</span>,
+  <span class="json-key">"internal_notes"</span>: [
+    {
+      <span class="json-key">"note"</span>: <span class="json-string">"Application looks complete. All docs verified."</span>,
+      <span class="json-key">"created_by"</span>: <span class="json-string">"admin-uuid-here"</span>,
+      <span class="json-key">"created_at"</span>: <span class="json-string">"2026-01-14T12:30:00Z"</span>
+    }
+  ]
+}</pre>
+          </div>
+        </div>
+        
+        <div class="response-section">
+          <h4>Error Responses</h4>
+          <p><span class="status-code status-404">404 Not Found</span> - Application does not exist</p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"error"</span>: <span class="json-string">"APPLICATION_NOT_FOUND"</span>,
+  <span class="json-key">"message"</span>: <span class="json-string">"Application not found"</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Endpoint 4: Start Review -->
+    <section id="start-review">
+      <h2>4. Start Review</h2>
+      
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="http-method method-post">POST</span>
+          <span class="endpoint-path">/admin/applications/{id}/review</span>
+          <span class="auth-required">🔒 Auth Required</span>
+        </div>
+        
+        <p class="endpoint-description">
+          Mark an application as "Under Review" and assign it to the current admin. This prevents other admins from simultaneously reviewing the same application.
+        </p>
+        
+        <div class="callout callout-info">
+          <strong>Auto-trigger:</strong> This endpoint can be called automatically when an admin opens the detail view of a pending application, or manually via a button.
+        </div>
+        
+        <h4>Path Parameters</h4>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">id</span></td>
+              <td><span class="param-type">UUID</span></td>
+              <td>Application ID</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4>Request Body</h4>
+        <p>No request body required.</p>
+        
+        <div class="response-section">
+          <h4>Success Response</h4>
+          <p><span class="status-code status-200">200 OK</span></p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"id"</span>: <span class="json-string">"123e4567-e89b-12d3-a456-426614174000"</span>,
+  <span class="json-key">"status"</span>: <span class="json-string">"under_review"</span>,
+  <span class="json-key">"reviewed_by"</span>: <span class="json-string">"admin-uuid-here"</span>,
+  <span class="json-key">"reviewed_at"</span>: <span class="json-string">"2026-01-14T14:30:00Z"</span>,
+  <span class="json-key">"message"</span>: <span class="json-string">"Application is now under review"</span>
+}</pre>
+          </div>
+        </div>
+        
+        <div class="response-section">
+          <h4>Error Responses</h4>
+          <p><span class="status-code status-409">409 Conflict</span> - Application is not in pending_review status</p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"error"</span>: <span class="json-string">"INVALID_APPLICATION_STATE"</span>,
+  <span class="json-key">"message"</span>: <span class="json-string">"Application is not in pending review state"</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Endpoint 5: Request More Info -->
+    <section id="request-info">
+      <h2>5. Request More Information</h2>
+      
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="http-method method-post">POST</span>
+          <span class="endpoint-path">/admin/applications/{id}/request-info</span>
+          <span class="auth-required">🔒 Auth Required</span>
+        </div>
+        
+        <p class="endpoint-description">
+          Request additional information from the applicant. Changes status to "More Info Requested" and sends an email to the applicant with the admin's message.
+        </p>
+        
+        <h4>Path Parameters</h4>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">id</span></td>
+              <td><span class="param-type">UUID</span></td>
+              <td>Application ID</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4>Request Body</h4>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">message</span></td>
+              <td><span class="param-type">string</span></td>
+              <td><span class="required-badge">Required</span></td>
+              <td>Message to applicant explaining what information is needed. Min: 10 chars, Max: 1000 chars</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4>Example Request</h4>
+        <div class="code-block">
+          <pre>POST /admin/applications/{id}/request-info
+
+{
+  <span class="json-key">"message"</span>: <span class="json-string">"Please provide a copy of your school's official registration certificate and recent enrollment records."</span>
+}</pre>
+        </div>
+        
+        <div class="response-section">
+          <h4>Success Response</h4>
+          <p><span class="status-code status-200">200 OK</span></p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"id"</span>: <span class="json-string">"123e4567-e89b-12d3-a456-426614174000"</span>,
+  <span class="json-key">"status"</span>: <span class="json-string">"more_info_requested"</span>,
+  <span class="json-key">"message"</span>: <span class="json-string">"Information request sent to applicant"</span>
+}</pre>
+          </div>
+        </div>
+        
+        <div class="response-section">
+          <h4>Error Responses</h4>
+          <p><span class="status-code status-400">400 Bad Request</span> - Validation error (message too short/long)</p>
+          <p><span class="status-code status-409">409 Conflict</span> - Application not in reviewable state</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Endpoint 6: Approve Application -->
+    <section id="approve">
+      <h2>6. Approve Application</h2>
+      
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="http-method method-post">POST</span>
+          <span class="endpoint-path">/admin/applications/{id}/approve</span>
+          <span class="auth-required">🔒 Auth Required</span>
+        </div>
+        
+        <p class="endpoint-description">
+          Approve the application and provision the school. This triggers an atomic transaction that creates the school tenant, admin user account, generates temporary password, and sends welcome email.
+        </p>
+        
+        <div class="callout callout-danger">
+          <strong>Critical Operation:</strong> This action cannot be undone through the UI. All provisioning steps occur in a database transaction. If any step fails, everything rolls back.
+        </div>
+        
+        <h4>Path Parameters</h4>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">id</span></td>
+              <td><span class="param-type">UUID</span></td>
+              <td>Application ID</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4>Request Body</h4>
+        <p>No request body required.</p>
+        
+        <div class="response-section">
+          <h4>Success Response</h4>
+          <p><span class="status-code status-200">200 OK</span></p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"id"</span>: <span class="json-string">"123e4567-e89b-12d3-a456-426614174000"</span>,
+  <span class="json-key">"status"</span>: <span class="json-string">"approved"</span>,
+  <span class="json-key">"school_id"</span>: <span class="json-string">"school-uuid-here"</span>,
+  <span class="json-key">"admin_user_id"</span>: <span class="json-string">"user-uuid-here"</span>,
+  <span class="json-key">"message"</span>: <span class="json-string">"Application approved. School and admin account created successfully."</span>
+}</pre>
+          </div>
+        </div>
+        
+        <div class="response-section">
+          <h4>Error Responses</h4>
+          <p><span class="status-code status-409">409 Conflict</span> - Application not in reviewable state</p>
+          <p><span class="status-code status-500">500 Internal Server Error</span> - Provisioning failed (transaction rolled back)</p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"error"</span>: <span class="json-string">"PROVISIONING_FAILED"</span>,
+  <span class="json-key">"message"</span>: <span class="json-string">"Failed to create school. Please try again or contact support."</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Endpoint 7: Reject Application -->
+    <section id="reject">
+      <h2>7. Reject Application</h2>
+      
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="http-method method-post">POST</span>
+          <span class="endpoint-path">/admin/applications/{id}/reject</span>
+          <span class="auth-required">🔒 Auth Required</span>
+        </div>
+        
+        <p class="endpoint-description">
+          Reject the application with a reason. Changes status to "Rejected" and sends a rejection email to the applicant. The school can reapply after 30 days.
+        </p>
+        
+        <h4>Path Parameters</h4>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">id</span></td>
+              <td><span class="param-type">UUID</span></td>
+              <td>Application ID</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4>Request Body</h4>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">reason</span></td>
+              <td><span class="param-type">string</span></td>
+              <td><span class="required-badge">Required</span></td>
+              <td>Detailed reason for rejection. Min: 20 chars, Max: 1000 chars</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4>Example Request</h4>
+        <div class="code-block">
+          <pre>POST /admin/applications/{id}/reject
+
+{
+  <span class="json-key">"reason"</span>: <span class="json-string">"Unable to verify the school's registration with the Ministry of Education. Please provide official documentation."</span>
+}</pre>
+        </div>
+        
+        <div class="response-section">
+          <h4>Success Response</h4>
+          <p><span class="status-code status-200">200 OK</span></p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"id"</span>: <span class="json-string">"123e4567-e89b-12d3-a456-426614174000"</span>,
+  <span class="json-key">"status"</span>: <span class="json-string">"rejected"</span>,
+  <span class="json-key">"message"</span>: <span class="json-string">"Application rejected. Notification sent to applicant."</span>
+}</pre>
+          </div>
+        </div>
+        
+        <div class="response-section">
+          <h4>Error Responses</h4>
+          <p><span class="status-code status-400">400 Bad Request</span> - Reason too short or missing</p>
+          <p><span class="status-code status-409">409 Conflict</span> - Application not in reviewable state</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Endpoint 8: Add Internal Note -->
+    <section id="add-note">
+      <h2>8. Add Internal Note</h2>
+      
+      <div class="endpoint">
+        <div class="endpoint-header">
+          <span class="http-method method-post">POST</span>
+          <span class="endpoint-path">/admin/applications/{id}/notes</span>
+          <span class="auth-required">🔒 Auth Required</span>
+        </div>
+        
+        <p class="endpoint-description">
+          Add an internal note to an application. Notes are only visible to platform administrators and are never shown to applicants.
+        </p>
+        
+        <h4>Path Parameters</h4>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">id</span></td>
+              <td><span class="param-type">UUID</span></td>
+              <td>Application ID</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4>Request Body</h4>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">note</span></td>
+              <td><span class="param-type">string</span></td>
+              <td><span class="required-badge">Required</span></td>
+              <td>Note content. Min: 1 char, Max: 2000 chars</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <h4>Example Request</h4>
+        <div class="code-block">
+          <pre>POST /admin/applications/{id}/notes
+
+{
+  <span class="json-key">"note"</span>: <span class="json-string">"Called the principal to verify. School is legitimate and registered with MoE."</span>
+}</pre>
+        </div>
+        
+        <div class="response-section">
+          <h4>Success Response</h4>
+          <p><span class="status-code status-201">201 Created</span></p>
+          
+          <div class="code-block">
+            <pre>{
+  <span class="json-key">"id"</span>: <span class="json-string">"123e4567-e89b-12d3-a456-426614174000"</span>,
+  <span class="json-key">"note"</span>: {
+    <span class="json-key">"note"</span>: <span class="json-string">"Called the principal to verify. School is legitimate and registered with MoE."</span>,
+    <span class="json-key">"created_by"</span>: <span class="json-string">"admin-uuid-here"</span>,
+    <span class="json-key">"created_at"</span>: <span class="json-string">"2026-01-14T15:45:00Z"</span>
+  },
+  <span class="json-key">"message"</span>: <span class="json-string">"Note added successfully"</span>
+}</pre>
+          </div>
+        </div>
+        
+        <div class="response-section">
+          <h4>Error Responses</h4>
+          <p><span class="status-code status-400">400 Bad Request</span> - Note is empty or too long</p>
+          <p><span class="status-code status-404">404 Not Found</span> - Application not found</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Schemas Section -->
+    <section id="schemas">
+      <h2>9. Schemas & Types</h2>
+      
+      <h3>ApplicationStatus Enum</h3>
+      <div class="schema-box">
+        <div class="code-block">
+          <pre><span class="json-string">"awaiting_applicant_verification"</span>
+<span class="json-string">"awaiting_principal_confirmation"</span>
+<span class="json-string">"pending_review"</span>
+<span class="json-string">"under_review"</span>
+<span class="json-string">"more_info_requested"</span>
+<span class="json-string">"approved"</span>
+<span class="json-string">"rejected"</span>
+<span class="json-string">"expired"</span></pre>
+        </div>
+      </div>
+      
+      <h3>SchoolType Enum</h3>
+      <div class="schema-box">
+        <div class="code-block">
+          <pre><span class="json-string">"public"</span>
+<span class="json-string">"private"</span>
+<span class="json-string">"mission"</span>
+<span class="json-string">"university"</span>
+<span class="json-string">"vocational"</span></pre>
+        </div>
+      </div>
+      
+      <h3>StudentPopulation Enum</h3>
+      <div class="schema-box">
+        <div class="code-block">
+          <pre><span class="json-string">"under_100"</span>
+<span class="json-string">"100_to_300"</span>
+<span class="json-string">"300_to_500"</span>
+<span class="json-string">"over_500"</span></pre>
+        </div>
+      </div>
+      
+      <h3>InternalNote Object</h3>
+      <div class="schema-box">
+        <div class="code-block">
+          <pre>{
+  <span class="json-key">"note"</span>: <span class="json-string">"Text content of the note"</span>,
+  <span class="json-key">"created_by"</span>: <span class="json-string">"UUID of admin who created the note"</span>,
+  <span class="json-key">"created_at"</span>: <span class="json-string">"ISO 8601 timestamp"</span>
+}</pre>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Error Responses Section -->
+    <section id="errors">
+      <h2>10. Error Responses</h2>
+      
+      <h3>Standard Error Format</h3>
+      <p>All error responses follow this format:</p>
+      
+      <div class="code-block">
+        <pre>{
+  <span class="json-key">"error"</span>: <span class="json-string">"ERROR_CODE"</span>,
+  <span class="json-key">"message"</span>: <span class="json-string">"Human-readable error description"</span>
+}</pre>
+      </div>
+      
+      <h3>Common Error Codes</h3>
+      <table class="param-table">
+        <thead>
+          <tr>
+            <th>Error Code</th>
+            <th>Status</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="param-name">UNAUTHORIZED</span></td>
+            <td><span class="status-code status-401">401</span></td>
+            <td>Missing or invalid authentication token</td>
+          </tr>
+          <tr>
+            <td><span class="param-name">FORBIDDEN</span></td>
+            <td><span class="status-code status-403">403</span></td>
+            <td>User lacks required permissions (not platform_admin)</td>
+          </tr>
+          <tr>
+            <td><span class="param-name">APPLICATION_NOT_FOUND</span></td>
+            <td><span class="status-code status-404">404</span></td>
+            <td>Application with given ID does not exist</td>
+          </tr>
+          <tr>
+            <td><span class="param-name">INVALID_APPLICATION_STATE</span></td>
+            <td><span class="status-code status-409">409</span></td>
+            <td>Application not in correct state for requested action</td>
+          </tr>
+          <tr>
+            <td><span class="param-name">VALIDATION_ERROR</span></td>
+            <td><span class="status-code status-400">400</span></td>
+            <td>Request body validation failed</td>
+          </tr>
+          <tr>
+            <td><span class="param-name">PROVISIONING_FAILED</span></td>
+            <td><span class="status-code status-500">500</span></td>
+            <td>School provisioning failed (transaction rolled back)</td>
+          </tr>
+          <tr>
+            <td><span class="param-name">INTERNAL_ERROR</span></td>
+            <td><span class="status-code status-500">500</span></td>
+            <td>Unexpected server error</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <h3>Validation Error Format</h3>
+      <p>Pydantic validation errors include field-level details:</p>
+      
+      <div class="code-block">
+        <pre>{
+  <span class="json-key">"detail"</span>: [
+    {
+      <span class="json-key">"loc"</span>: [<span class="json-string">"body"</span>, <span class="json-string">"message"</span>],
+      <span class="json-key">"msg"</span>: <span class="json-string">"ensure this value has at least 10 characters"</span>,
+      <span class="json-key">"type"</span>: <span class="json-string">"value_error.any_str.min_length"</span>
+    }
+  ]
+}</pre>
+      </div>
+    </section>
+    
+    <footer>
+      <p>EK-SMS Admin Review Dashboard API Contract</p>
+      <p>Document Version 1.0 • January 2026</p>
+      <p>Feature Branch: feature/admin-review-dashboard</p>
+    </footer>
+  </div>
+</body>
+</html>
