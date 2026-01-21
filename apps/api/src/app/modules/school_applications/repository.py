@@ -12,7 +12,7 @@ Design Principles:
 - Timezone-aware datetime handling (UTC)
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import and_, delete, or_, select
@@ -551,3 +551,348 @@ async def get_principal_tokens_to_expire(
     )
     # Convert Row objects to proper tuples
     return [(row[0], row[1]) for row in result.all()]
+
+
+# ============================================
+# Admin Repository Methods
+# ============================================
+
+
+async def get_applications_for_admin(
+    db: AsyncSession,
+    *,
+    status: ApplicationStatus | None = None,
+    country_code: str | None = None,
+    search: str | None = None,
+    sort_by: str = "submitted_at",
+    sort_order: str = "asc",
+    skip: int = 0,
+    limit: int = 20,
+) -> tuple[list[SchoolApplication], int]:
+    """
+    Get applications with filters, sorting, and pagination for admin dashboard.
+
+    Implements efficient filtering, search, and pagination with a single query
+    for the applications list and a separate count query for total.
+
+    Args:
+        db: Database session
+        status: Filter by application status (optional)
+        country_code: Filter by 2-letter country code (optional)
+        search: Search term for school name, school email, applicant email,
+                principal email (case-insensitive, optional)
+        sort_by: Column to sort by (submitted_at, school_name). Default: submitted_at
+        sort_order: Sort direction (asc, desc). Default: asc (oldest first for fairness)
+        skip: Number of records to skip for pagination. Default: 0
+        limit: Maximum records to return (1-100). Default: 20
+
+    Returns:
+        Tuple of (list of applications, total count matching filters)
+
+    Example:
+        applications, total = await get_applications_for_admin(
+            db,
+            status=ApplicationStatus.PENDING_REVIEW,
+            sort_order="asc",
+            skip=0,
+            limit=20,
+        )
+    """
+    from sqlalchemy import asc, desc, func
+
+    # Build base query
+    query = select(SchoolApplication)
+
+    # Apply status filter
+    if status:
+        query = query.where(SchoolApplication.status == status)
+
+    # Apply country filter
+    if country_code:
+        query = query.where(SchoolApplication.country_code == country_code)
+
+    # Apply search filter (case-insensitive search across multiple fields)
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.where(
+            or_(
+                SchoolApplication.school_name.ilike(search_pattern),
+                SchoolApplication.school_email.ilike(search_pattern),
+                SchoolApplication.applicant_email.ilike(search_pattern),
+                SchoolApplication.principal_email.ilike(search_pattern),
+            )
+        )
+
+    # Get total count before pagination (using subquery for efficiency)
+    count_query = select(func.count()).select_from(query.subquery())
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+
+    # Apply sorting
+    valid_sort_columns = {"submitted_at", "school_name"}
+    if sort_by not in valid_sort_columns:
+        sort_by = "submitted_at"
+
+    sort_column = getattr(SchoolApplication, sort_by)
+    if sort_order.lower() == "desc":
+        query = query.order_by(desc(sort_column))
+    else:
+        query = query.order_by(asc(sort_column))
+
+    # Apply pagination
+    query = query.offset(skip).limit(limit)
+
+    # Execute query
+    result = await db.execute(query)
+    applications = list(result.scalars().all())
+
+    return applications, total
+
+
+async def get_dashboard_stats(db: AsyncSession) -> dict:
+    """
+    Get aggregated statistics for the admin dashboard.
+
+    Calculates counts for various application statuses and metrics
+    using efficient database-level aggregations.
+
+    Returns:
+        Dict with:
+        - pending_review: int - Count awaiting admin action
+        - under_review: int - Count currently being reviewed
+        - more_info_requested: int - Count waiting for applicant response
+        - approved_this_week: int - Count approved in last 7 days
+        - total_this_month: int - Total submitted in current month
+        - avg_review_time_days: float | None - Avg days from submission to decision
+
+    Note:
+        avg_review_time_days is calculated from applications decided in the
+        past 30 days where both submitted_at and reviewed_at are set.
+    """
+    from sqlalchemy import case, extract, func
+
+    now = datetime.now(UTC)
+
+    # Calculate date boundaries
+    week_ago = now - timedelta(days=7)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    thirty_days_ago = now - timedelta(days=30)
+
+    # Single query for all status counts
+    status_counts_query = select(
+        func.count(
+            case(
+                (SchoolApplication.status == ApplicationStatus.PENDING_REVIEW, 1),
+            )
+        ).label("pending_review"),
+        func.count(
+            case(
+                (SchoolApplication.status == ApplicationStatus.UNDER_REVIEW, 1),
+            )
+        ).label("under_review"),
+        func.count(
+            case(
+                (SchoolApplication.status == ApplicationStatus.MORE_INFO_REQUESTED, 1),
+            )
+        ).label("more_info_requested"),
+        # Approved this week (approved status AND reviewed_at within last 7 days)
+        func.count(
+            case(
+                (
+                    and_(
+                        SchoolApplication.status == ApplicationStatus.APPROVED,
+                        SchoolApplication.reviewed_at >= week_ago,
+                    ),
+                    1,
+                ),
+            )
+        ).label("approved_this_week"),
+        # Total this month (submitted in current month)
+        func.count(
+            case(
+                (SchoolApplication.submitted_at >= month_start, 1),
+            )
+        ).label("total_this_month"),
+    )
+
+    status_result = await db.execute(status_counts_query)
+    status_row = status_result.one()
+
+    # Separate query for average review time (more complex)
+    # Calculated from applications with both submitted_at and reviewed_at
+    # that were decided (approved or rejected) in the past 30 days
+    avg_time_query = select(
+        func.avg(
+            extract(
+                "epoch",
+                SchoolApplication.reviewed_at - SchoolApplication.submitted_at,
+            )
+            / 86400  # Convert seconds to days
+        )
+    ).where(
+        and_(
+            SchoolApplication.status.in_([ApplicationStatus.APPROVED, ApplicationStatus.REJECTED]),
+            SchoolApplication.reviewed_at.is_not(None),
+            SchoolApplication.reviewed_at >= thirty_days_ago,
+        )
+    )
+
+    avg_result = await db.execute(avg_time_query)
+    avg_review_time = avg_result.scalar()
+
+    return {
+        "pending_review": status_row.pending_review,
+        "under_review": status_row.under_review,
+        "more_info_requested": status_row.more_info_requested,
+        "approved_this_week": status_row.approved_this_week,
+        "total_this_month": status_row.total_this_month,
+        "avg_review_time_days": (
+            round(float(avg_review_time), 1) if avg_review_time is not None else None
+        ),
+    }
+
+
+async def update_application_for_review(
+    db: AsyncSession,
+    application_id: UUID,
+    reviewed_by: UUID,
+) -> SchoolApplication:
+    """
+    Update application to 'under_review' status and assign reviewer.
+
+    Sets the reviewed_by and reviewed_at fields when an admin starts
+    reviewing an application.
+
+    Args:
+        db: Database session
+        application_id: UUID of the application
+        reviewed_by: UUID of the admin starting the review
+
+    Returns:
+        Updated SchoolApplication
+
+    Raises:
+        ValueError: If application not found
+        InvalidStatusTransitionError: If application not in PENDING_REVIEW state
+    """
+    application = await get_by_id(db, application_id)
+    if not application:
+        raise ValueError(f"Application {application_id} not found")
+
+    # Use existing update_status with state machine validation
+    return await update_status(
+        db,
+        application_id,
+        ApplicationStatus.UNDER_REVIEW,
+        reviewed_by=reviewed_by,
+        reviewed_at=datetime.now(UTC),
+    )
+
+
+async def update_application_decision(
+    db: AsyncSession,
+    application_id: UUID,
+    status: ApplicationStatus,
+    decision_reason: str | None = None,
+    reviewed_by: UUID | None = None,
+) -> SchoolApplication:
+    """
+    Update application with a decision (approve, reject, more info requested).
+
+    Sets the status, decision_reason, and reviewed_at timestamp.
+
+    Args:
+        db: Database session
+        application_id: UUID of the application
+        status: New status (APPROVED, REJECTED, or MORE_INFO_REQUESTED)
+        decision_reason: Reason for rejection or info request (optional)
+        reviewed_by: UUID of admin making decision (updates if provided)
+
+    Returns:
+        Updated SchoolApplication
+
+    Raises:
+        ValueError: If application not found
+        InvalidStatusTransitionError: If transition is invalid
+    """
+    update_kwargs = {
+        "reviewed_at": datetime.now(UTC),
+    }
+
+    if decision_reason is not None:
+        update_kwargs["decision_reason"] = decision_reason
+
+    if reviewed_by is not None:
+        update_kwargs["reviewed_by"] = reviewed_by
+
+    return await update_status(db, application_id, status, **update_kwargs)
+
+
+async def add_internal_note(
+    db: AsyncSession,
+    application_id: UUID,
+    note: str,
+    created_by: UUID,
+) -> dict:
+    """
+    Add an internal note to an application.
+
+    Appends a new note object to the internal_notes JSON array.
+    If internal_notes is NULL, initializes it with the new note.
+
+    Args:
+        db: Database session
+        application_id: UUID of the application
+        note: Note content
+        created_by: UUID of the admin creating the note
+
+    Returns:
+        The newly created note object with note, created_by, created_at
+
+    Raises:
+        ValueError: If application not found
+    """
+    application = await get_by_id(db, application_id)
+    if not application:
+        raise ValueError(f"Application {application_id} not found")
+
+    # Create new note object
+    new_note = {
+        "note": note,
+        "created_by": str(created_by),
+        "created_at": datetime.now(UTC).isoformat(),
+    }
+
+    # Initialize or append to internal_notes
+    if application.internal_notes is None:
+        application.internal_notes = [new_note]
+    else:
+        # Create a new list to trigger SQLAlchemy change detection
+        application.internal_notes = [*application.internal_notes, new_note]
+
+    await db.commit()
+    await db.refresh(application)
+
+    return new_note
+
+
+async def get_applications_by_status(
+    db: AsyncSession,
+    statuses: list[ApplicationStatus],
+) -> list[SchoolApplication]:
+    """
+    Get all applications with any of the given statuses.
+
+    Useful for getting all reviewable applications or all pending applications.
+
+    Args:
+        db: Database session
+        statuses: List of statuses to filter by
+
+    Returns:
+        List of applications matching any of the given statuses
+    """
+    result = await db.execute(
+        select(SchoolApplication).where(SchoolApplication.status.in_(statuses))
+    )
+    return list(result.scalars().all())
