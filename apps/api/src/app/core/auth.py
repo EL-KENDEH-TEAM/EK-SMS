@@ -2,36 +2,19 @@
 Authentication and Authorization Module
 
 Provides authentication dependencies for FastAPI endpoints.
-This module handles JWT token validation and role-based access control.
-
-Current Status: DEVELOPMENT PLACEHOLDER
----
-This is a development-only placeholder that provides mock authentication.
-It MUST be replaced with actual JWT validation before production deployment.
-
-Production Implementation TODO:
-1. JWT token validation using jose or python-jwt
-2. Token refresh mechanism
-3. Role-based access control (RBAC)
-4. Session management with Redis
-5. Rate limiting per user
-6. Audit logging for security events
-
-Security Considerations:
-- Never log tokens or passwords
-- Use constant-time comparison for token validation
-- Implement token expiration and refresh
-- Use HTTPS only in production
-- Implement CSRF protection for cookie-based auth
+This module handles JWT token validation and role-based access control
+using the security utilities defined in security.py.
 """
 
 import logging
-import os
 from dataclasses import dataclass
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from app.core.config import settings
+from app.core.security import decode_token
 
 logger = logging.getLogger(__name__)
 
@@ -47,13 +30,12 @@ class AdminUser:
     """
     Represents an authenticated platform admin user.
 
-    In production, this would be populated from the JWT claims and
-    validated against the database.
+    Populated from JWT claims after token validation.
 
     Attributes:
         id: User's unique identifier (UUID)
         email: User's email address
-        role: User's role (must be 'platform_admin' for admin endpoints)
+        role: User's role (must be 'super_admin' for platform admin endpoints)
         name: User's display name (optional)
     """
 
@@ -66,16 +48,14 @@ class AdminUser:
         return f"AdminUser(id={self.id}, email={self.email}, role={self.role})"
 
 
-# Development mode flag
-# In production, this should be False and actual JWT validation should be used
-_DEVELOPMENT_MODE = os.getenv("PYTHON_ENV", "development") == "development"
+# Development mode flag - allows mock authentication for local testing
+_DEVELOPMENT_MODE = settings.is_development
 
-# Development admin user for testing
-# This is ONLY used when PYTHON_ENV=development
+# Development admin user for testing (only used when PYTHON_ENV=development)
 _DEV_ADMIN = AdminUser(
     id=UUID("00000000-0000-0000-0000-000000000001"),
     email="admin@eksms.dev",
-    role="platform_admin",
+    role="super_admin",
     name="Development Admin",
 )
 
@@ -84,7 +64,8 @@ async def _validate_jwt_token(token: str) -> AdminUser:
     """
     Validate JWT token and extract user claims.
 
-    TODO: Replace with actual JWT validation in production.
+    Uses the decode_token function from security.py which handles
+    JWT signature verification, algorithm validation, and expiration checks.
 
     Args:
         token: JWT token string from Authorization header
@@ -94,71 +75,81 @@ async def _validate_jwt_token(token: str) -> AdminUser:
 
     Raises:
         HTTPException 401: If token is invalid or expired
-        HTTPException 403: If user doesn't have required role
     """
-    # PRODUCTION TODO: Implement actual JWT validation
-    # Example implementation:
-    # try:
-    #     payload = jwt.decode(
-    #         token,
-    #         settings.JWT_SECRET,
-    #         algorithms=["HS256"],
-    #     )
-    #     user_id = UUID(payload["sub"])
-    #     email = payload["email"]
-    #     role = payload["role"]
-    #     exp = payload["exp"]
-    #
-    #     # Check expiration
-    #     if datetime.now(UTC) > datetime.fromtimestamp(exp, UTC):
-    #         raise HTTPException(
-    #             status_code=status.HTTP_401_UNAUTHORIZED,
-    #             detail={"error": "TOKEN_EXPIRED", "message": "Token has expired"},
-    #         )
-    #
-    #     return AdminUser(id=user_id, email=email, role=role)
-    # except jwt.InvalidTokenError as e:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_401_UNAUTHORIZED,
-    #         detail={"error": "INVALID_TOKEN", "message": str(e)},
-    #     )
-
-    # Development mode: Accept any token and return dev admin
+    # In development mode, accept test tokens for easier local testing
     if _DEVELOPMENT_MODE:
-        logger.warning(
-            "DEVELOPMENT MODE: Using mock authentication. "
-            "Replace with actual JWT validation before production!"
-        )
-        # For development, accept specific test tokens
+        # Accept specific test tokens
         if token in ["dev-token", "test-token", "bearer"]:
+            logger.debug("Development mode: Using test token")
             return _DEV_ADMIN
 
-        # Also accept any token that looks like a UUID (for testing)
+        # Accept UUID tokens as user IDs for testing
         try:
-            # If token is a valid UUID, treat it as a user ID
             user_id = UUID(token)
             return AdminUser(
                 id=user_id,
                 email=f"admin-{str(user_id)[:8]}@eksms.dev",
-                role="platform_admin",
+                role="super_admin",
                 name="Test Admin",
             )
         except ValueError:
             pass
 
-        # For any other token in dev mode, return the default dev admin
-        # This makes testing easier
-        return _DEV_ADMIN
+    # Decode and validate the JWT token using security.py
+    payload = decode_token(token)
 
-    # Production mode: Reject all tokens (not implemented)
-    logger.error("JWT validation not implemented for production!")
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail={
-            "error": "AUTH_NOT_IMPLEMENTED",
-            "message": "Authentication is not yet implemented for production.",
-        },
-    )
+    if payload is None:
+        logger.warning("Invalid or expired JWT token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "INVALID_TOKEN",
+                "message": "Invalid or expired authentication token.",
+            },
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Extract required claims from token payload
+    try:
+        user_id_str = payload.get("sub")
+        if not user_id_str:
+            raise ValueError("Missing 'sub' claim in token")
+
+        user_id = UUID(user_id_str)
+        email = payload.get("email", "")
+        role = payload.get("role", "")
+        name = payload.get("name")
+
+        # Verify token type is access token
+        token_type = payload.get("type", "access")
+        if token_type != "access":
+            logger.warning(f"Invalid token type: {token_type}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={
+                    "error": "INVALID_TOKEN_TYPE",
+                    "message": "This endpoint requires an access token.",
+                },
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        return AdminUser(
+            id=user_id,
+            email=email,
+            role=role,
+            name=name,
+        )
+
+    except (ValueError, KeyError) as e:
+        logger.warning(f"Invalid token claims: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "INVALID_TOKEN_CLAIMS",
+                "message": "Token contains invalid or missing claims.",
+            },
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
 
 
 async def get_current_admin_user(
@@ -168,7 +159,7 @@ async def get_current_admin_user(
     FastAPI dependency that validates the JWT token and returns the admin user.
 
     This dependency should be used on all admin endpoints to ensure
-    the request is from an authenticated platform admin.
+    the request is from an authenticated platform admin (super_admin role).
 
     Usage:
         @router.get("/admin/endpoint")
@@ -192,11 +183,11 @@ async def get_current_admin_user(
     # Validate token and get user
     user = await _validate_jwt_token(token)
 
-    # Verify user has platform_admin role
-    if user.role != "platform_admin":
+    # Verify user has super_admin role (platform admin)
+    if user.role != "super_admin":
         logger.warning(
             f"Access denied: User {user.id} ({user.email}) has role '{user.role}', "
-            "but 'platform_admin' is required"
+            "but 'super_admin' is required"
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -235,7 +226,6 @@ async def get_optional_admin_user(
         return None
 
 
-# Export for use in admin_router.py
 __all__ = [
     "AdminUser",
     "get_current_admin_user",

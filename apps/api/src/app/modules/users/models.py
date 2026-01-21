@@ -5,12 +5,16 @@ Database models for user management and authentication.
 """
 
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, String, Text
-from sqlalchemy.dialects.postgresql import ENUM
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import ENUM, UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.modules.shared import BaseModel
+
+if TYPE_CHECKING:
+    from app.modules.schools.models import School
 
 
 class UserRole(str, Enum):
@@ -31,9 +35,20 @@ class User(BaseModel):
 
     This is the core identity model. Role-specific data
     (Teacher, Student, Parent) will be in separate linked models.
+
+    Multi-tenant: school_id is required for all roles except SUPER_ADMIN.
+    SUPER_ADMIN users are platform-level and have no school_id.
     """
 
     __tablename__ = "users"
+
+    # Multi-tenant: Link to school (NULL for platform admins)
+    school_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False),
+        ForeignKey("schools.id"),
+        nullable=True,
+        index=True,
+    )
 
     # Authentication fields
     email: Mapped[str] = mapped_column(
@@ -82,6 +97,13 @@ class User(BaseModel):
         nullable=False,
     )
 
+    # Password management
+    must_change_password: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
     # Two-factor authentication
     is_two_factor_enabled: Mapped[bool] = mapped_column(
         Boolean,
@@ -91,6 +113,13 @@ class User(BaseModel):
     two_factor_secret: Mapped[str | None] = mapped_column(
         String(32),
         nullable=True,
+    )
+
+    # Relationships
+    school: Mapped["School | None"] = relationship(
+        "School",
+        back_populates="users",
+        lazy="selectin",
     )
 
     def __repr__(self) -> str:

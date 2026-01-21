@@ -1572,37 +1572,63 @@ async def admin_approve_application(
         # ============================================
         # ATOMIC TRANSACTION: All DB operations must succeed
         # ============================================
-        # Note: In a real implementation, we would create actual School and User
-        # records here. For now, we simulate the IDs since those models may not
-        # exist yet. This should be replaced with actual provisioning logic.
+        from app.core.security import hash_password
+        from app.modules.schools.repository import SchoolRepository
+        from app.modules.users.models import UserRole
+        from app.modules.users.repository import UserRepository
 
-        # TODO: Replace with actual school provisioning when School model exists
-        # school = await school_repository.create_school(db, {
-        #     "name": application.school_name,
-        #     "school_type": application.school_type,
-        #     "country_code": application.country_code,
-        #     "city": application.city,
-        #     "address": application.address,
-        #     ...
-        # })
+        # Check if admin email already exists (prevent duplicate accounts)
+        existing_user = await UserRepository.get_by_email(db, admin_email)
+        if existing_user:
+            logger.warning(f"User with email {admin_email} already exists")
+            raise SchoolProvisioningError(
+                f"A user with email {admin_email} already exists. "
+                "Please contact support or use a different email."
+            )
 
-        # TODO: Replace with actual user provisioning when User model exists
-        # hashed_password = await hash_password(temp_password)
-        # admin_user = await user_repository.create_user(db, {
-        #     "email": admin_email,
-        #     "name": admin_name,
-        #     "password_hash": hashed_password,
-        #     "school_id": school.id,
-        #     "role": "school_admin",
-        #     "must_change_password": True,
-        # })
+        # Parse admin name into first/last name
+        name_parts = admin_name.split(" ", 1)
+        first_name = name_parts[0]
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-        # For now, generate UUIDs as placeholders
-        # In production, these would come from the created records
-        import uuid as uuid_module
+        # Create the school record
+        school = await SchoolRepository.create(
+            db,
+            name=application.school_name,
+            year_established=application.year_established,
+            school_type=application.school_type.value,
+            student_population=application.student_population.value,
+            country_code=application.country_code,
+            city=application.city,
+            address=application.address,
+            principal_name=application.principal_name,
+            principal_email=application.principal_email,
+            principal_phone=application.principal_phone,
+            phone=application.school_phone,
+            email=application.school_email,
+            online_presence=application.online_presence,
+            application_id=str(application_id),
+        )
 
-        school_id = uuid_module.uuid4()
-        admin_user_id = uuid_module.uuid4()
+        logger.info(f"Created school: {school.id} - {school.name}")
+
+        # Create the admin user with hashed temp password
+        hashed_password = hash_password(temp_password)
+
+        admin_user = await UserRepository.create(
+            db,
+            email=admin_email,
+            password_hash=hashed_password,
+            first_name=first_name,
+            last_name=last_name,
+            role=UserRole.SCHOOL_ADMIN,
+            school_id=school.id,
+            is_active=True,
+            is_verified=True,
+            must_change_password=True,
+        )
+
+        logger.info(f"Created admin user: {admin_user.id} - {admin_user.email}")
 
         # Update application status to APPROVED
         await repository.update_application_decision(
@@ -1614,12 +1640,15 @@ async def admin_approve_application(
 
         logger.info(
             f"Application {application_id} approved. "
-            f"School ID: {school_id}, Admin User ID: {admin_user_id}"
+            f"School ID: {school.id}, Admin User ID: {admin_user.id}"
         )
 
         # ============================================
         # END ATOMIC TRANSACTION
         # ============================================
+
+        school_id = school.id
+        admin_user_id = admin_user.id
 
         # Send welcome email with credentials (outside transaction)
         try:
