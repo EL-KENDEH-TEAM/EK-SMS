@@ -36,14 +36,13 @@ async def lifespan(_app: FastAPI):
     # Startup
     print(f"Starting EK-SMS API in {settings.python_env} mode...")
 
-    # Initialize Redis
+    # Initialize Redis (optional - app can run without it)
     try:
         await init_redis()
         print("[OK] Redis connected")
     except Exception as e:
-        print(f"[FAIL] Redis connection failed: {e}")
-        if settings.is_production:
-            raise
+        print(f"[WARN] Redis connection failed: {e}")
+        print("[INFO] Continuing without Redis - rate limiting will be disabled")
 
     # Initialize Database
     try:

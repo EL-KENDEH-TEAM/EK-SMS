@@ -29,18 +29,25 @@ async def init_redis() -> Redis:
     return redis_client
 
 
-async def get_redis() -> Redis:
+async def get_redis() -> Redis | None:
     """
     Get Redis client instance.
 
+    Returns None if Redis is not available (optional dependency).
+
     Usage in FastAPI:
         @app.get("/cached")
-        async def get_cached(redis: Redis = Depends(get_redis)):
-            ...
+        async def get_cached(redis: Redis | None = Depends(get_redis)):
+            if redis is None:
+                # Handle case where Redis is unavailable
+                ...
     """
-    if redis_client is None:
-        raise RuntimeError("Redis not initialized. Call init_redis() first.")
     return redis_client
+
+
+def is_redis_available() -> bool:
+    """Check if Redis client is initialized and available."""
+    return redis_client is not None
 
 
 async def close_redis() -> None:
