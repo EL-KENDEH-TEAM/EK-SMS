@@ -39,18 +39,18 @@ async def lifespan(_app: FastAPI):
     # Initialize Redis
     try:
         await init_redis()
-        print("✓ Redis connected")
+        print("[OK] Redis connected")
     except Exception as e:
-        print(f"✗ Redis connection failed: {e}")
+        print(f"[FAIL] Redis connection failed: {e}")
         if settings.is_production:
             raise
 
     # Initialize Database
     try:
         await init_db()
-        print("✓ Database connected")
+        print("[OK] Database connected")
     except Exception as e:
-        print(f"✗ Database connection failed: {e}")
+        print(f"[FAIL] Database connection failed: {e}")
         if settings.is_production:
             raise
 
@@ -61,9 +61,9 @@ async def lifespan(_app: FastAPI):
 
         # Start the scheduler
         await start_scheduler()
-        print("✓ Background scheduler started")
+        print("[OK] Background scheduler started")
     except Exception as e:
-        print(f"✗ Background scheduler failed to start: {e}")
+        print(f"[FAIL] Background scheduler failed to start: {e}")
         if settings.is_production:
             raise
 
@@ -74,11 +74,11 @@ async def lifespan(_app: FastAPI):
 
     # Stop the scheduler first (wait for running jobs)
     await stop_scheduler()
-    print("✓ Background scheduler stopped")
+    print("[OK] Background scheduler stopped")
 
     await close_redis()
     await close_db()
-    print("✓ Cleanup complete")
+    print("[OK] Cleanup complete")
 
 
 app = FastAPI(
