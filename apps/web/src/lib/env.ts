@@ -14,7 +14,7 @@ const getEnvVar = (key: string, fallback?: string): string => {
 
 export const env = {
   // API Configuration
-  apiUrl: getEnvVar("NEXT_PUBLIC_API_URL", "http://localhost:8002"),
+  apiUrl: getEnvVar("NEXT_PUBLIC_API_URL", "http://localhost:8002/api/v1"),
   appUrl: getEnvVar("NEXT_PUBLIC_APP_URL", "http://localhost:3000"),
 
   // Environment
