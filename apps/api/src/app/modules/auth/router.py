@@ -3,15 +3,23 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.security import create_access_token, create_refresh_token, verify_password
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    verify_password,
+)
 from app.modules.auth.schemas import LoginRequest, LoginResponse, UserResponse
 from app.modules.schools.models import School  # noqa: F401  # Required for User.school relationship
 from app.modules.users.repository import UserRepository
 
 logger = logging.getLogger(__name__)
+
+security = HTTPBearer()
 
 router = APIRouter()
 
@@ -101,4 +109,69 @@ async def login(
             created_at=user.created_at.isoformat(),
             updated_at=user.updated_at.isoformat(),
         ),
+    )
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db),
+) -> UserResponse:
+    """
+    Get current authenticated user.
+
+    Args:
+        credentials: Bearer token from Authorization header
+        db: Database session
+
+    Returns:
+        Current user info
+
+    Raises:
+        HTTPException 401: Invalid or expired token
+    """
+    token = credentials.credentials
+    payload = decode_token(token)
+
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "INVALID_TOKEN",
+                "message": "Invalid or expired token.",
+            },
+        )
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "INVALID_TOKEN",
+                "message": "Invalid token payload.",
+            },
+        )
+
+    user = await UserRepository.get_by_id(db, user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "error": "USER_NOT_FOUND",
+                "message": "User not found.",
+            },
+        )
+
+    return UserResponse(
+        id=str(user.id),
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        role=user.role.value,
+        is_active=user.is_active,
+        is_verified=user.is_verified,
+        is_two_factor_enabled=user.is_two_factor_enabled,
+        created_at=user.created_at.isoformat(),
+        updated_at=user.updated_at.isoformat(),
     )
