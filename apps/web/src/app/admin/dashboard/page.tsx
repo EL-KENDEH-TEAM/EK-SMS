@@ -38,12 +38,12 @@ export default function AdminDashboard() {
     }, []);
 
     const stats = dashboardStats ? [
-        { label: 'PENDING REVIEW', value: String(dashboardStats.pending_review), change: '+3 from last week', color: 'text-blue-600', trend: 'up' },
-        { label: 'UNDER REVIEW', value: String(dashboardStats.under_review), change: '-2 from last week', color: 'text-slate-900', trend: 'down' },
-        { label: 'MORE INFO REQUESTED', value: String(dashboardStats.more_info_requested), change: '+1 from last week', color: 'text-slate-900', trend: 'up' },
-        { label: 'THIS MONTH', value: String(dashboardStats.total_this_month), change: 'Applications received', color: 'text-slate-900' },
-        { label: 'APPROVED (THIS WEEK)', value: String(dashboardStats.approved_this_week), change: '✓ On target', color: 'text-slate-900', trend: 'positive' },
-        { label: 'AVG. REVIEW TIME', value: dashboardStats.avg_review_time_days.toFixed(1), change: 'days', color: 'text-slate-900' },
+        { label: 'PENDING REVIEW', value: String(dashboardStats.pending_review ?? 0), change: '+3 from last week', color: 'text-blue-600', trend: 'up' },
+        { label: 'UNDER REVIEW', value: String(dashboardStats.under_review ?? 0), change: '-2 from last week', color: 'text-slate-900', trend: 'down' },
+        { label: 'MORE INFO REQUESTED', value: String(dashboardStats.more_info_requested ?? 0), change: '+1 from last week', color: 'text-slate-900', trend: 'up' },
+        { label: 'THIS MONTH', value: String(dashboardStats.total_this_month ?? 0), change: 'Applications received', color: 'text-slate-900' },
+        { label: 'APPROVED (THIS WEEK)', value: String(dashboardStats.approved_this_week ?? 0), change: '✓ On target', color: 'text-slate-900', trend: 'positive' },
+        { label: 'AVG. REVIEW TIME', value: (dashboardStats.avg_review_time_days ?? 0).toFixed(1), change: 'days', color: 'text-slate-900' },
     ] : [];
 
     if (isLoading) {
