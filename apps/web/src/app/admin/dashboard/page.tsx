@@ -1,14 +1,26 @@
 'use client';
 
+// Task 3: Dashboard Statistics Cards - Clickable navigation
 // Task 4: Metric Dashboard UI Alignment Completed
-// Task 13: Migrate UI Components Completed
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getApplications, getDashboardStats } from '@/lib/api/admin-applications';
 import type { ApplicationListItem, DashboardStats } from '@/app/admin/types/admin';
 
+interface StatCard {
+    label: string;
+    value: string;
+    change: string;
+    color: string;
+    trend?: string;
+    clickable: boolean;
+    filterStatus?: string;
+}
+
 export default function AdminDashboard() {
+    const router = useRouter();
     const [recentApps, setRecentApps] = useState<ApplicationListItem[]>([]);
     const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -37,14 +49,20 @@ export default function AdminDashboard() {
         fetchDashboardData();
     }, []);
 
-    const stats = dashboardStats ? [
-        { label: 'PENDING REVIEW', value: String(dashboardStats.pending_review ?? 0), change: '+3 from last week', color: 'text-blue-600', trend: 'up' },
-        { label: 'UNDER REVIEW', value: String(dashboardStats.under_review ?? 0), change: '-2 from last week', color: 'text-slate-900', trend: 'down' },
-        { label: 'MORE INFO REQUESTED', value: String(dashboardStats.more_info_requested ?? 0), change: '+1 from last week', color: 'text-slate-900', trend: 'up' },
-        { label: 'THIS MONTH', value: String(dashboardStats.total_this_month ?? 0), change: 'Applications received', color: 'text-slate-900' },
-        { label: 'APPROVED (THIS WEEK)', value: String(dashboardStats.approved_this_week ?? 0), change: '✓ On target', color: 'text-slate-900', trend: 'positive' },
-        { label: 'AVG. REVIEW TIME', value: (dashboardStats.avg_review_time_days ?? 0).toFixed(1), change: 'days', color: 'text-slate-900' },
+    const stats: StatCard[] = dashboardStats ? [
+        { label: 'PENDING REVIEW', value: String(dashboardStats.pending_review ?? 0), change: '+3 from last week', color: 'text-blue-600', trend: 'up', clickable: true, filterStatus: 'pending_review' },
+        { label: 'UNDER REVIEW', value: String(dashboardStats.under_review ?? 0), change: '-2 from last week', color: 'text-slate-900', trend: 'down', clickable: true, filterStatus: 'under_review' },
+        { label: 'MORE INFO REQUESTED', value: String(dashboardStats.more_info_requested ?? 0), change: '+1 from last week', color: 'text-slate-900', trend: 'up', clickable: true, filterStatus: 'more_info_requested' },
+        { label: 'THIS MONTH', value: String(dashboardStats.total_this_month ?? 0), change: 'Applications received', color: 'text-slate-900', clickable: false },
+        { label: 'APPROVED (THIS WEEK)', value: String(dashboardStats.approved_this_week ?? 0), change: '✓ On target', color: 'text-slate-900', trend: 'positive', clickable: true, filterStatus: 'approved' },
+        { label: 'AVG. REVIEW TIME', value: (dashboardStats.avg_review_time_days ?? 0).toFixed(1), change: 'days', color: 'text-slate-900', clickable: false },
     ] : [];
+
+    const handleStatClick = (stat: StatCard) => {
+        if (stat.clickable && stat.filterStatus) {
+            router.push(`/admin/applications?status=${stat.filterStatus}`);
+        }
+    };
 
     if (isLoading) {
         return (
@@ -58,32 +76,70 @@ export default function AdminDashboard() {
     }
 
     return (
-        <div className="p-10 bg-slate-50 min-h-screen font-sans text-slate-900">
-            <div className="mb-10">
-                <h1 className="text-3xl font-bold text-slate-800 mb-2">Dashboard</h1>
+        <div className="p-4 sm:p-6 lg:p-10 bg-slate-50 min-h-screen font-sans text-slate-900">
+            <div className="mb-6 lg:mb-10">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Dashboard</h1>
                 <p className="text-slate-500 text-sm">Overview of school registration applications</p>
             </div>
 
             {/* Stats Grid - 4x1 then 2x1 as per wireframe */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 {stats.slice(0, 4).map((stat) => (
-                    <div key={stat.label} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md">
+                    <div
+                        key={stat.label}
+                        onClick={() => handleStatClick(stat)}
+                        className={`bg-white p-6 rounded-xl border-2 shadow-sm transition-all duration-200 relative group
+                            ${stat.clickable
+                                ? 'cursor-pointer border-transparent hover:border-blue-500 hover:shadow-lg hover:-translate-y-1'
+                                : 'border-slate-200 cursor-default'}`}
+                    >
+                        {/* Arrow icon for clickable cards */}
+                        {stat.clickable && (
+                            <span className="absolute top-6 right-6 text-slate-300 group-hover:text-blue-500 transition-colors text-xl">
+                                →
+                            </span>
+                        )}
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-4">{stat.label}</p>
                         <p className={`text-4xl font-bold mb-2 ${stat.color}`}>{stat.value}</p>
                         <p className={`text-xs font-medium ${stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-blue-500' : stat.trend === 'positive' ? 'text-green-600' : 'text-slate-400'}`}>
                             {stat.change}
                         </p>
+                        {/* "Click to view all" hint for clickable cards */}
+                        {stat.clickable && (
+                            <p className="text-[10px] font-bold text-blue-600 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Click to view all →
+                            </p>
+                        )}
                     </div>
                 ))}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 {stats.slice(4).map((stat) => (
-                    <div key={stat.label} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-md">
+                    <div
+                        key={stat.label}
+                        onClick={() => handleStatClick(stat)}
+                        className={`bg-white p-6 rounded-xl border-2 shadow-sm transition-all duration-200 relative group
+                            ${stat.clickable
+                                ? 'cursor-pointer border-transparent hover:border-blue-500 hover:shadow-lg hover:-translate-y-1'
+                                : 'border-slate-200 cursor-default'}`}
+                    >
+                        {/* Arrow icon for clickable cards */}
+                        {stat.clickable && (
+                            <span className="absolute top-6 right-6 text-slate-300 group-hover:text-blue-500 transition-colors text-xl">
+                                →
+                            </span>
+                        )}
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-4">{stat.label}</p>
                         <p className="text-4xl font-bold mb-2 text-slate-900">{stat.value}</p>
                         <p className={`text-xs font-medium ${stat.change.includes('target') ? 'text-green-600' : 'text-slate-400'}`}>
                             {stat.change}
                         </p>
+                        {/* "Click to view all" hint for clickable cards */}
+                        {stat.clickable && (
+                            <p className="text-[10px] font-bold text-blue-600 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                Click to view all →
+                            </p>
+                        )}
                     </div>
                 ))}
             </div>

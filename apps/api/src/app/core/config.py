@@ -21,7 +21,9 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=("../../.env.local", "../../.env", ".env.local", ".env"),
+        # Order matters: later files override earlier ones
+        # .env.local should have highest priority for local development
+        env_file=(".env", "../../.env", ".env.local", "../../.env.local"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -123,7 +125,9 @@ class Settings(BaseSettings):
     # ==========================================
     # Security
     # ==========================================
-    cors_origins: str = Field(default="http://localhost:3000,https://ek-sms-web.vercel.app")
+    cors_origins: str = Field(
+        default="http://localhost:3000,http://localhost:3003,http://localhost:3004,https://ek-sms-web.vercel.app"
+    )
     allowed_hosts: str = Field(default="localhost,127.0.0.1")
 
     @computed_field
