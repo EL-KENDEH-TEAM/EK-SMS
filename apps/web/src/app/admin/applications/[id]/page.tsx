@@ -249,9 +249,9 @@ export function ApplicationDetailPage() {
 
                         {/* Visual Timeline */}
                         <div className="space-y-0 relative ml-3">
-                            {app.timeline.slice(0, 3).map((event, i) => (
+                            {(app.timeline ?? []).slice(0, 3).map((event, i) => (
                                 <div key={event.id} className="group flex gap-8 items-start relative pb-10 last:pb-0">
-                                    {i < Math.min(app.timeline.length, 3) - 1 && (
+                                    {i < Math.min((app.timeline ?? []).length, 3) - 1 && (
                                         <div className="absolute left-[11px] top-6 w-[2px] h-full bg-slate-100"></div>
                                     )}
                                     <div className="relative z-10 w-6 h-6 rounded-full bg-white flex items-center justify-center border-2 border-blue-500 shadow-sm">
@@ -309,12 +309,12 @@ export function ApplicationDetailPage() {
                     <InfoField label="ONLINE PRESENCE" value={
                         <div className="space-y-1">
                             {app.website && <div className="text-slate-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis">Website: <a href={app.website} target="_blank" className="text-blue-600 hover:underline">{app.website}</a></div>}
-                            {app.online_presence.map((social, i) => (
+                            {(app.online_presence ?? []).map((social, i) => (
                                 <div key={i} className="text-slate-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis">{social.type}: <a href={social.url} target="_blank" className="text-blue-600 hover:underline">{social.url}</a></div>
                             ))}
                         </div>
                     } className="md:col-span-3" />
-                    <InfoField label="ADDITIONAL COMMENTS" value={app.reasons.join(' | ') || 'None stated'} className="md:col-span-3" />
+                    <InfoField label="ADDITIONAL COMMENTS" value={(app.reasons ?? []).join(' | ') || 'None stated'} className="md:col-span-3" />
                 </InfoSection>
 
                 {/* Internal Notes Section (Wireframe Aligned) */}
