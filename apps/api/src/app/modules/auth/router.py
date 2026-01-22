@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import create_access_token, create_refresh_token, verify_password
 from app.modules.auth.schemas import LoginRequest, LoginResponse, UserResponse
+from app.modules.schools.models import School  # noqa: F401  # Required for User.school relationship
 from app.modules.users.repository import UserRepository
 
 logger = logging.getLogger(__name__)
