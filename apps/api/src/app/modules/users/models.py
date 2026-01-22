@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class UserRole(str, Enum):
     """User roles in the system."""
 
-    SUPER_ADMIN = "super_admin"
+    PLATFORM_ADMIN = "platform_admin"
     SCHOOL_ADMIN = "school_admin"
     TEACHER = "teacher"
     STUDENT = "student"
@@ -36,8 +36,8 @@ class User(BaseModel):
     This is the core identity model. Role-specific data
     (Teacher, Student, Parent) will be in separate linked models.
 
-    Multi-tenant: school_id is required for all roles except SUPER_ADMIN.
-    SUPER_ADMIN users are platform-level and have no school_id.
+    Multi-tenant: school_id is required for all roles except PLATFORM_ADMIN.
+    PLATFORM_ADMIN users are platform-level and have no school_id.
     """
 
     __tablename__ = "users"

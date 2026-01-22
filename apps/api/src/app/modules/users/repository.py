@@ -43,7 +43,7 @@ class UserRepository:
             first_name: User's first name
             last_name: User's last name
             role: User's role
-            school_id: School ID (required for non-super_admin roles)
+            school_id: School ID (required for non-platform_admin roles)
             phone: Phone number (optional)
             is_active: Whether user is active
             is_verified: Whether email is verified

@@ -41,7 +41,7 @@ class AdminUser:
     Attributes:
         id: User's unique identifier (UUID)
         email: User's email address
-        role: User's role (must be 'super_admin' for platform admin endpoints)
+        role: User's role (must be 'platform_admin' for platform admin endpoints)
         name: User's display name (optional)
     """
 
@@ -94,7 +94,7 @@ _DEVELOPMENT_MODE = _is_dev_mode_safe()
 _DEV_ADMIN = AdminUser(
     id=UUID("00000000-0000-0000-0000-000000000001"),
     email="admin@eksms.dev",
-    role="super_admin",
+    role="platform_admin",
     name="Development Admin",
 )
 
@@ -128,7 +128,7 @@ async def _validate_jwt_token(token: str) -> AdminUser:
             return AdminUser(
                 id=user_id,
                 email=f"admin-{str(user_id)[:8]}@eksms.dev",
-                role="super_admin",
+                role="platform_admin",
                 name="Test Admin",
             )
         except ValueError:
@@ -198,7 +198,7 @@ async def get_current_admin_user(
     FastAPI dependency that validates the JWT token and returns the admin user.
 
     This dependency should be used on all admin endpoints to ensure
-    the request is from an authenticated platform admin (super_admin role).
+    the request is from an authenticated platform admin (platform_admin role).
 
     Usage:
         @router.get("/admin/endpoint")
@@ -222,11 +222,11 @@ async def get_current_admin_user(
     # Validate token and get user
     user = await _validate_jwt_token(token)
 
-    # Verify user has super_admin role (platform admin)
-    if user.role != "super_admin":
+    # Verify user has platform_admin role
+    if user.role != "platform_admin":
         logger.warning(
             f"Access denied: User {user.id} ({user.email}) has role '{user.role}', "
-            "but 'super_admin' is required"
+            "but 'platform_admin' is required"
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
