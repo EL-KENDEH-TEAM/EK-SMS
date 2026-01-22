@@ -2,20 +2,14 @@
  * Environment Configuration
  *
  * Type-safe access to environment variables.
+ * Note: Next.js requires static access to process.env.NEXT_PUBLIC_* variables.
  */
-
-const getEnvVar = (key: string, fallback?: string): string => {
-  const value = process.env[key] ?? fallback;
-  if (!value) {
-    throw new Error(`Missing environment variable: ${key}`);
-  }
-  return value;
-};
 
 export const env = {
   // API Configuration
-  apiUrl: getEnvVar("NEXT_PUBLIC_API_URL", "http://localhost:8002/api/v1"),
-  appUrl: getEnvVar("NEXT_PUBLIC_APP_URL", "http://localhost:3000"),
+  // Must use static access for Next.js to replace at build time
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002/api/v1",
+  appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
 
   // Environment
   isDevelopment: process.env.NODE_ENV === "development",

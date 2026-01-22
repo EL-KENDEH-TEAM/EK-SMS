@@ -15,10 +15,10 @@ import type {
     Country
 } from '@/app/register/types/registration';
 
-// API URL configuration
-// In production, NEXT_PUBLIC_API_URL should be set via environment variables
-// Falls back to localhost for development
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002') + '/api/v1';
+import { env } from '../env';
+
+// API URL from centralized env configuration
+const API_URL = env.apiUrl;
 
 /**
  * Sanitize string input - trim whitespace
