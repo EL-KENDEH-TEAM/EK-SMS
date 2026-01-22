@@ -95,17 +95,7 @@ class Settings(BaseSettings):
     # ==========================================
     # Redis
     # ==========================================
-    redis_host: str = "localhost"
-    redis_port: int = 6380
-    redis_password: str = ""
-
-    @computed_field
-    @property
-    def redis_url(self) -> str:
-        """Construct Redis URL."""
-        if self.redis_password:
-            return f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/0"
-        return f"redis://{self.redis_host}:{self.redis_port}/0"
+    redis_url: str = "redis://localhost:6380/0"
 
     # ==========================================
     # JWT Authentication
