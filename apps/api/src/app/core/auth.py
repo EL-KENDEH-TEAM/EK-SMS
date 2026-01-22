@@ -4,9 +4,15 @@ Authentication and Authorization Module
 Provides authentication dependencies for FastAPI endpoints.
 This module handles JWT token validation and role-based access control
 using the security utilities defined in security.py.
+
+SECURITY NOTE:
+- Development mode auth bypass is ONLY enabled when PYTHON_ENV=development
+- Production environments MUST set PYTHON_ENV=production to disable test tokens
+- The is_production check provides an additional safety layer
 """
 
 import logging
+import os
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -48,8 +54,41 @@ class AdminUser:
         return f"AdminUser(id={self.id}, email={self.email}, role={self.role})"
 
 
-# Development mode flag - allows mock authentication for local testing
-_DEVELOPMENT_MODE = settings.is_development
+def _is_dev_mode_safe() -> bool:
+    """
+    Check if development mode is safe to enable.
+
+    SECURITY: This function has multiple layers of protection to prevent
+    development auth bypass from being enabled in production:
+
+    1. settings.is_development must be True (PYTHON_ENV=development)
+    2. settings.is_production must be False (double-check)
+    3. PYTHON_ENV environment variable must not be "production" (triple-check)
+
+    Returns:
+        True only if ALL safety checks pass
+    """
+    env_var = os.getenv("PYTHON_ENV", "").lower()
+
+    # Triple-check: must be development AND not production
+    is_safe = (
+        settings.is_development
+        and not settings.is_production
+        and env_var != "production"
+        and env_var != "staging"
+    )
+
+    if is_safe:
+        logger.warning(
+            "SECURITY: Development auth mode is ENABLED. This MUST NOT be used in production!"
+        )
+
+    return is_safe
+
+
+# Development mode flag - allows mock authentication for LOCAL testing ONLY
+# SECURITY: Multiple checks prevent this from being enabled in production
+_DEVELOPMENT_MODE = _is_dev_mode_safe()
 
 # Development admin user for testing (only used when PYTHON_ENV=development)
 _DEV_ADMIN = AdminUser(

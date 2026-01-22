@@ -19,6 +19,7 @@ Security:
 - Input validation via Pydantic schemas
 - Comprehensive error handling with structured responses
 - Audit logging for all admin actions
+- Rate limiting on action endpoints to prevent abuse
 """
 
 import logging
@@ -30,6 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import AdminUser, get_current_admin_user
 from app.core.database import get_db
+from app.core.rate_limit import RateLimitExceeded, check_rate_limit
 from app.modules.school_applications import service
 from app.modules.school_applications.models import ApplicationStatus
 from app.modules.school_applications.schemas import (
@@ -58,6 +60,47 @@ from app.modules.school_applications.service import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+# ============================================
+# Rate Limiting Configuration
+# ============================================
+
+# Rate limits for admin action endpoints (prevent abuse)
+RATE_LIMIT_APPROVE = (10, 60)  # 10 approvals per minute
+RATE_LIMIT_REJECT = (10, 60)  # 10 rejections per minute
+RATE_LIMIT_REQUEST_INFO = (20, 60)  # 20 info requests per minute
+RATE_LIMIT_NOTES = (30, 60)  # 30 notes per minute
+RATE_LIMIT_START_REVIEW = (30, 60)  # 30 review starts per minute
+
+
+async def _check_admin_rate_limit(
+    admin: AdminUser,
+    action: str,
+    limit: int,
+    window_seconds: int,
+) -> None:
+    """
+    Check rate limit for an admin action.
+
+    Args:
+        admin: The authenticated admin user
+        action: Action name (e.g., "approve", "reject")
+        limit: Maximum requests allowed
+        window_seconds: Time window in seconds
+
+    Raises:
+        RateLimitExceeded: If rate limit is exceeded
+    """
+    key = f"admin:{action}:{admin.id}"
+    allowed = await check_rate_limit(key, limit, window_seconds)
+
+    if not allowed:
+        logger.warning(
+            f"Rate limit exceeded for admin {admin.id} on action '{action}': "
+            f"{limit}/{window_seconds}s"
+        )
+        raise RateLimitExceeded(limit, window_seconds)
 
 
 # ============================================
@@ -446,6 +489,9 @@ async def start_review(
     """
     Start reviewing an application.
     """
+    # Rate limiting: 30 review starts per minute per admin
+    await _check_admin_rate_limit(admin, "start_review", *RATE_LIMIT_START_REVIEW)
+
     try:
         application = await service.admin_start_review(db, application_id, admin.id)
 
@@ -547,6 +593,9 @@ async def request_more_info(
     """
     Request more information from applicant.
     """
+    # Rate limiting: 20 info requests per minute per admin
+    await _check_admin_rate_limit(admin, "request_info", *RATE_LIMIT_REQUEST_INFO)
+
     try:
         application = await service.admin_request_more_info(
             db, application_id, admin.id, data.message
@@ -640,6 +689,9 @@ async def add_note(
     """
     Add an internal note to an application.
     """
+    # Rate limiting: 30 notes per minute per admin
+    await _check_admin_rate_limit(admin, "add_note", *RATE_LIMIT_NOTES)
+
     try:
         note_dict = await service.admin_add_internal_note(db, application_id, admin.id, data.note)
 
@@ -741,6 +793,9 @@ async def approve_application(
     """
     Approve application and provision school.
     """
+    # Rate limiting: 10 approvals per minute per admin
+    await _check_admin_rate_limit(admin, "approve", *RATE_LIMIT_APPROVE)
+
     try:
         result = await service.admin_approve_application(db, application_id, admin.id)
 
@@ -856,6 +911,9 @@ async def reject_application(
     """
     Reject an application.
     """
+    # Rate limiting: 10 rejections per minute per admin
+    await _check_admin_rate_limit(admin, "reject", *RATE_LIMIT_REJECT)
+
     try:
         application = await service.admin_reject_application(
             db, application_id, admin.id, data.reason

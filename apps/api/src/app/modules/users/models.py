@@ -43,9 +43,10 @@ class User(BaseModel):
     __tablename__ = "users"
 
     # Multi-tenant: Link to school (NULL for platform admins)
+    # ON DELETE SET NULL: If school is deleted, users remain but lose school association
     school_id: Mapped[str | None] = mapped_column(
         UUID(as_uuid=False),
-        ForeignKey("schools.id"),
+        ForeignKey("schools.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )

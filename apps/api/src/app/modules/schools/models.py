@@ -115,9 +115,10 @@ class School(BaseModel):
     )
 
     # Reference to original application
+    # ON DELETE SET NULL: If application is deleted, school remains but loses the reference
     application_id: Mapped[str | None] = mapped_column(
         UUID(as_uuid=False),
-        ForeignKey("school_applications.id"),
+        ForeignKey("school_applications.id", ondelete="SET NULL"),
         nullable=True,
         unique=True,
     )

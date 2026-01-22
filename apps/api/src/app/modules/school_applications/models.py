@@ -173,9 +173,17 @@ class SchoolApplication(Base):
 
     # Indexes for common queries
     __table_args__ = (
+        # Admin dashboard filtering
         Index("ix_school_applications_status", "status"),
+        Index("ix_school_applications_country_code", "country_code"),
+        # Admin dashboard sorting (oldest first for fairness)
+        Index("ix_school_applications_submitted_at", "submitted_at"),
+        # Search optimization
         Index("ix_school_applications_applicant_email", "applicant_email"),
         Index("ix_school_applications_principal_email", "principal_email"),
+        Index("ix_school_applications_school_email", "school_email"),
+        # Composite index for common filtered+sorted queries
+        Index("ix_school_applications_status_submitted", "status", "submitted_at"),
         Index(
             "ix_school_applications_school_city",
             "school_name",
