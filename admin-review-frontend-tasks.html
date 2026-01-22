@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EK-SMS - Admin Review Dashboard Frontend Tasks</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      background-color: #f9fafb;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    
+    header {
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 3px solid #1a365d;
+    }
+    
+    .logo {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a365d;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a365d;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      font-size: 15px;
+      color: #6b7280;
+    }
+    
+    .meta {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    
+    .meta span {
+      margin-right: 24px;
+    }
+    
+    .branch-box {
+      background-color: #f0fdf4;
+      border: 2px solid #22c55e;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-top: 20px;
+    }
+    
+    .branch-label {
+      font-size: 12px;
+      color: #166534;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    
+    .branch-name {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: #166534;
+    }
+    
+    .overview {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .overview h2 {
+      font-size: 18px;
+      color: #1a365d;
+      margin-bottom: 12px;
+    }
+    
+    .overview p {
+      color: #4b5563;
+      margin-bottom: 12px;
+    }
+    
+    .task {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .task-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background-color: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .task-number {
+      background-color: #1a365d;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    
+    .task-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      flex: 1;
+    }
+    
+    .task-body {
+      padding: 20px;
+    }
+    
+    .task-section {
+      margin-bottom: 20px;
+    }
+    
+    .task-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .task-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    
+    .task-description {
+      color: #4b5563;
+      font-size: 14px;
+    }
+    
+    .task-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .task-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 14px;
+      color: #4b5563;
+    }
+    
+    .task-list li::before {
+      content: "•";
+      color: #1a365d;
+      font-weight: bold;
+    }
+    
+    .checkbox-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .checkbox-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 14px;
+      color: #4b5563;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .checkbox-list li:last-child {
+      border-bottom: none;
+    }
+    
+    .checkbox-list input[type="checkbox"] {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+    }
+    
+    .code-block {
+      background-color: #1f2937;
+      color: #e5e7eb;
+      padding: 16px;
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    
+    .code-block pre {
+      margin: 0;
+      white-space: pre;
+    }
+    
+    .file-path {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 13px;
+      color: #dc2626;
+      background-color: #fef2f2;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    
+    .dependency-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 4px;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    
+    .dep-none {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    
+    .dep-task {
+      background-color: #dbeafe;
+      color: #1e40af;
+    }
+    
+    .api-ref {
+      background-color: #f3e8ff;
+      color: #6b21a8;
+    }
+    
+    .wireframe-ref {
+      background-color: #fce7f3;
+      color: #9d174d;
+    }
+    
+    .wireframe-box {
+      background-color: #fdf2f8;
+      border: 1px solid #fbcfe8;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .wireframe-icon {
+      font-size: 24px;
+    }
+    
+    .wireframe-info {
+      flex: 1;
+    }
+    
+    .wireframe-label {
+      font-size: 12px;
+      color: #9d174d;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .wireframe-text {
+      font-size: 14px;
+      color: #831843;
+    }
+    
+    .note {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #1e40af;
+      margin: 12px 0;
+    }
+    
+    .warning {
+      background-color: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #92400e;
+      margin: 12px 0;
+    }
+    
+    .progress-section {
+      background-color: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .progress-section h2 {
+      font-size: 16px;
+      color: #1a365d;
+      margin-bottom: 16px;
+    }
+    
+    .progress-bar-container {
+      background-color: #e5e7eb;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    
+    .progress-bar {
+      background-color: #22c55e;
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    .progress-text {
+      font-size: 13px;
+      color: #6b7280;
+    }
+    
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .summary-item {
+      text-align: center;
+      padding: 12px;
+      background-color: #f9fafb;
+      border-radius: 8px;
+    }
+    
+    .summary-number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1a365d;
+    }
+    
+    .summary-label {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      color: #9ca3af;
+      font-size: 13px;
+    }
+    
+    @media (max-width: 640px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .task-header {
+        flex-wrap: wrap;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">EK-SMS</div>
+      <h1>Admin Review Dashboard Frontend Tasks</h1>
+      <p class="subtitle">Frontend development tasks for the Admin Review Dashboard feature</p>
+      <div class="meta">
+        <span>Total Tasks: 14</span>
+        <span>Reference: admin-review-api-contract.html</span>
+      </div>
+      
+      <div class="branch-box">
+        <div class="branch-label">🌿 Feature Branch</div>
+        <div class="branch-name">feature/admin-review-dashboard</div>
+        <div style="font-size: 12px; color: #166534; margin-top: 8px;">Create this branch from <code>develop</code> before starting. All work should be done in this branch.</div>
+      </div>
+    </header>
+    
+    <!-- Progress Tracker -->
+    <div class="progress-section">
+      <h2>Progress Tracker</h2>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="progress-text"><span id="completedCount">0</span> of 14 tasks completed</div>
+      
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-number">14</div>
+          <div class="summary-label">Total Tasks</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">3</div>
+          <div class="summary-label">Main Views</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-number">3</div>
+          <div class="summary-label">Action Modals</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Overview -->
+    <div class="overview">
+      <h2>Before You Start</h2>
+      <p>Make sure you have:</p>
+      <ul class="task-list">
+        <li>Read the <strong>admin-review-api-contract.html</strong> document</li>
+        <li>Opened <strong>admin-review-dashboard-wireframe.html</strong> in browser</li>
+        <li>Next.js dev server running on port 3000</li>
+        <li>Understanding of the existing registration feature (https://ek-sms-web.vercel.app)</li>
+      </ul>
+      
+      <div class="note">
+        <strong>IMPORTANT:</strong> Your UI must match <strong>admin-review-dashboard-wireframe.html</strong> exactly. Reference it continuously while building.
+      </div>
+      
+      <div class="note">
+        <strong>File Location:</strong> All admin pages go in <span class="file-path">apps/web/src/app/admin/</span>
+      </div>
+    </div>
+    
+    <!-- Task 1 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">1</div>
+        <div class="task-title">Setup: Routes, Layout & Types</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Set up the folder structure, routing, shared layout, and TypeScript types for the admin dashboard feature.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-none">None - Start here</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Header + Sidebar (visible on all views)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Files to Create</div>
+          <div class="code-block">
+            <pre>apps/web/src/app/admin/
+├── layout.tsx              # Shared layout (sidebar + header)
+├── dashboard/
+│   └── page.tsx            # Dashboard view
+├── applications/
+│   ├── page.tsx            # Applications list
+│   └── [id]/
+│       └── page.tsx        # Application detail
+└── types/
+    └── admin.ts            # TypeScript types</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Create TypeScript types matching API contract (ApplicationListItem, ApplicationDetail, DashboardStats, InternalNote)</li>
+            <li>Layout has header with EK-SMS logo and admin info</li>
+            <li>Sidebar with 2 nav items: Dashboard, Applications</li>
+            <li>Active link highlighting in sidebar</li>
+            <li>Authentication check (redirect to login if not authenticated)</li>
+            <li>Role check (only platform_admin can access)</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Folder structure created correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> TypeScript types defined matching API contract</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Layout renders with header and sidebar</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Navigation links functional</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Routes accessible at /admin/dashboard and /admin/applications</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Auth and role checks implemented</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 2 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">2</div>
+        <div class="task-title">API Client: Admin Review Functions</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Create API client functions for all admin review endpoints using the centralized API client pattern.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 1</span>
+          <span class="dependency-tag api-ref">See admin-review-api-contract.html</span>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Files to Create</div>
+          <div class="code-block">
+            <pre>apps/web/src/lib/api/
+└── admin-applications.ts   # All admin API functions</pre>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Import existing ApiClient from lib/api/client.ts</li>
+            <li>Create 8 typed functions: getApplications(), getDashboardStats(), getApplicationDetail(), startReview(), requestMoreInfo(), approveApplication(), rejectApplication(), addInternalNote()</li>
+            <li>Use proper TypeScript types for params and responses</li>
+            <li>Handle errors properly and return formatted responses</li>
+            <li>Add JSDoc comments for each function</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All 8 API functions created</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Functions properly typed with TypeScript</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error handling implemented</li>
+            <li><input type="checkbox" onchange="updateProgress()"> JSDoc comments added</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Exports available from file</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 3 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">3</div>
+        <div class="task-title">Dashboard View: Statistics Cards</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build the dashboard overview page with 6 statistics cards. 4 cards are clickable and navigate to filtered applications list.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 1</span>
+          <span class="dependency-tag dep-task">Task 2</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Dashboard View (6 stat cards in 2x3 grid)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Fetch dashboard stats using getDashboardStats()</li>
+            <li>Display 6 stat cards: Pending Review (clickable), Under Review (clickable), More Info Requested (clickable), This Month (info), Approved This Week (clickable), Avg Review Time (metric)</li>
+            <li>Clickable cards navigate to /admin/applications?status=XXX</li>
+            <li>Hover effect: lift card, show blue border, show "Click to view all →" hint</li>
+            <li>Arrow icon (→) on clickable cards</li>
+            <li>Responsive grid (2x3 desktop, 1 column mobile)</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All 6 stat cards display correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Clickable cards navigate with status filter</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Hover effects work (lift, border, hint text)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Loading state shown while fetching</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error handling implemented</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Responsive design works on mobile</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe styling exactly</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 4 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">4</div>
+        <div class="task-title">Dashboard View: Recent Applications Table</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Add a table below stats cards showing 5 most recent applications with status badges and action buttons.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 3</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Dashboard View (Recent Applications table below cards)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Fetch recent applications: getApplications({ limit: 5, sort_order: 'desc' })</li>
+            <li>Table columns: School Name, Location (City, Country), Submitted (relative time), Status (badge), Action (button)</li>
+            <li>StatusBadge component with colors: Pending Review (yellow), Under Review (blue), More Info (pink), Approved (green), Rejected (red)</li>
+            <li>Row click navigates to /admin/applications/{id}</li>
+            <li>"View All" button navigates to /admin/applications</li>
+            <li>Show empty state if no applications</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Table displays 5 recent applications</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Status badges have correct colors</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Clicking row navigates to detail page</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Relative time formatting works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> "View All" button navigates correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Empty state handled</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe table styling</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 5 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">5</div>
+        <div class="task-title">Applications List: Filters & Search Bar</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build filters bar with search input, status filter, country filter, and sort options. Filters update URL params.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 2</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Applications List View (Filters bar at top)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Search input with magnifying glass icon (debounced 500ms)</li>
+            <li>Status dropdown: All, Pending Review, Under Review, More Info Requested, Approved, Rejected, Expired</li>
+            <li>Country dropdown: All, LR, SL, GH, NG, CI, SN, GM, GN</li>
+            <li>Sort dropdown: Oldest First (default), Newest First, Name A-Z, Name Z-A</li>
+            <li>Use Next.js useSearchParams to read URL, useRouter to update URL</li>
+            <li>Sync filter state with URL params (bookmarkable URLs)</li>
+            <li>Show active filter indicators (blue border/background)</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All 4 filter controls render correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Filters sync with URL params</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Search debounced by 500ms</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Active filters have visual indicator</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Clicking stat card pre-fills status filter</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe filter layout</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 6 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">6</div>
+        <div class="task-title">Applications List: Data Table & Pagination</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Display applications in sortable table with 7 columns and pagination controls at bottom.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 5</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Applications List View (Table + Pagination)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Fetch using getApplications() with filters from URL</li>
+            <li>Table columns: School Name, Location, Type, Students, Submitted, Status, Actions</li>
+            <li>Sortable headers (clicking toggles asc/desc)</li>
+            <li>Row hover effect and click navigates to detail</li>
+            <li>Pagination: Previous/Next buttons, page numbers (show 5 at a time), page state in URL</li>
+            <li>Show loading skeleton while fetching</li>
+            <li>Show empty state if no results</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Table displays all 7 columns correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Sortable columns work</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Loading skeleton shown during fetch</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Row hover and click work</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Pagination controls functional</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Page state in URL</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Empty state handled</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe table design</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 7 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">7</div>
+        <div class="task-title">Application Detail: Header & Status Section</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build top section of detail page: school name, app ID, status badge, verification badges, and timeline.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 2</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Application Detail View (Header + Timeline)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Fetch application using getApplicationDetail(id) from route params</li>
+            <li>Header: School name (h1), Application ID below, large status badge on right</li>
+            <li>"← Back to Applications" button</li>
+            <li>Verification badges: ✓ Applicant Verified, ✓ Principal Confirmed (or info badge if applicant is principal)</li>
+            <li>Timeline showing: Submitted, Email Verified, Principal Confirmed, Moved to Review, Review Started, Decision Made (with timestamps)</li>
+            <li>Handle loading state and 404</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Header displays school name and ID</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Status badge shows correct status</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Back button navigates to list</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Verification badges display correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Timeline shows all events with timestamps</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Loading state shown</li>
+            <li><input type="checkbox" onchange="updateProgress()"> 404 handled gracefully</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe header design</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 8 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">8</div>
+        <div class="task-title">Application Detail: Information Sections</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Display all application information in 5 organized sections with proper formatting.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 7</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Application Detail View (5 information sections)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Create InfoSection and InfoField components for reusable structure</li>
+            <li>5 sections: School Information (4 fields), Location (3 fields), Contact Information (5 fields), Applicant & Admin (4 fields), Additional Details (3 fields)</li>
+            <li>Use 2-column grid for fields (responsive to 1 column on mobile)</li>
+            <li>Format enums to human-readable (e.g., "300_to_500" → "300 - 500 students")</li>
+            <li>Show info callout if applicant is principal</li>
+            <li>Make emails clickable (mailto:), online presence as clickable links</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All 5 sections display correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Fields formatted properly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> 2-column grid responsive</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Email links work</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Online presence links clickable</li>
+            <li><input type="checkbox" onchange="updateProgress()"> "Applicant is Principal" notice shown when applicable</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe section styling</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 9 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">9</div>
+        <div class="task-title">Application Detail: Internal Notes Section</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Display existing internal notes and provide textarea + button to add new notes (admin-only).</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 8</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Application Detail View (Internal Notes section)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Warning banner: "Only visible to platform administrators"</li>
+            <li>Display existing notes in reverse chronological order (card with left border, author name, timestamp, content)</li>
+            <li>Textarea for new note (min-height 100px)</li>
+            <li>"Save Note" button that calls addInternalNote(id, note)</li>
+            <li>On save: validate not empty, show success message, clear textarea, refresh notes list</li>
+            <li>Show empty state if no notes yet</li>
+            <li>Disable save button while submitting</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Existing notes display correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Notes sorted newest first</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Timestamps formatted properly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Textarea and save button work</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Note saves successfully to API</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Success message shown after save</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Empty state handled</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe notes design</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 10 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">10</div>
+        <div class="task-title">Application Detail: Action Buttons</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Add three action buttons at bottom of detail page that open modals (to be built in next tasks).</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 9</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Application Detail View (Action buttons at bottom)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Action buttons section at bottom with border-top</li>
+            <li>3 buttons (right-aligned): "Request More Info" (yellow, 📝), "Reject Application" (red, ✖), "Approve Application" (green, ✓)</li>
+            <li>Each button opens respective modal (wire up in Tasks 11-13)</li>
+            <li>Hide buttons if application already approved/rejected (show message instead)</li>
+            <li>Disable buttons if not in reviewable state</li>
+            <li>Auto-call startReview(id) when opening pending_review application</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Three buttons display correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Buttons have correct colors and icons</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Buttons right-aligned</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Hidden if application already decided</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Disabled if not reviewable</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Auto-start review works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe button layout</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 11 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">11</div>
+        <div class="task-title">Modal: Request More Information</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build "Request More Information" modal with textarea for admin's message. Submits to API.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 10</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Modals section (Request Info modal)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Modal structure: Overlay (dark semi-transparent), white box (centered, max-width 500px)</li>
+            <li>Title: "Request More Information"</li>
+            <li>Info callout: "The applicant will receive an email with your message"</li>
+            <li>Textarea (required, min 10 chars, max 1000 chars)</li>
+            <li>Cancel and "Send Request" buttons</li>
+            <li>On submit: validate, call requestMoreInfo(id, message), show loading state, on success close modal + show toast + refresh data</li>
+            <li>Close on overlay click or Cancel</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Modal opens when button clicked</li>
+            <li><input type="checkbox" onchange="updateProgress()"> All elements display correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Validation works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> API call successful</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Success toast shown</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Application refreshes after success</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error handling works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Modal closes on overlay/cancel</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe modal design</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 12 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">12</div>
+        <div class="task-title">Modal: Reject Application</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build "Reject Application" modal with quick-select reasons and required textarea. Shows warning about permanent rejection.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 10</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Modals section (Reject modal)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Title: "Reject Application"</li>
+            <li>Red warning callout: "This action will permanently reject the application. The school can reapply after 30 days."</li>
+            <li>4 quick-select reason chips: Incomplete information, Unable to verify school, Duplicate application, Does not meet requirements</li>
+            <li>Clicking chip auto-fills/appends to textarea</li>
+            <li>Textarea (required, min 20 chars, max 1000 chars)</li>
+            <li>Cancel and "Reject Application" (red) buttons</li>
+            <li>On submit: validate min 20 chars, call rejectApplication(id, reason), show loading, on success navigate to list + show toast</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Modal opens when button clicked</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Warning callout displays prominently</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Quick-select chips work</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Validation enforces min 20 chars</li>
+            <li><input type="checkbox" onchange="updateProgress()"> API call successful</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Success toast shown</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Navigates to list after success</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error handling works</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe modal design</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 13 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">13</div>
+        <div class="task-title">Modal: Approve Application</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Build "Approve Application" confirmation modal showing what will be created. Triggers school provisioning.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Task 10</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Modals section (Approve modal)</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Implementation Details</div>
+          <ul class="task-list">
+            <li>Title: "Approve Application"</li>
+            <li>Green success callout: "Ready to approve!"</li>
+            <li>Summary box: School Tenant (name), Admin Account (name + email), Temporary Password (will be generated), Welcome Email (will be sent)</li>
+            <li>Info callout: "The admin will be required to change their password and set up 2FA on first login."</li>
+            <li>Cancel and "Approve & Create School" (green, larger) buttons</li>
+            <li>On submit: call approveApplication(id), show loading "Creating school...", on success navigate to list + show toast, on error show detailed message</li>
+          </ul>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Acceptance Criteria</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> Modal opens when button clicked</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Summary box shows correct admin details</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Info callout about 2FA displays</li>
+            <li><input type="checkbox" onchange="updateProgress()"> API call successful</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Loading state shows "Creating school..."</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Success toast shown</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Navigates to list after success</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error handling works (provisioning failures)</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Matches wireframe modal design</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Task 14 -->
+    <div class="task">
+      <div class="task-header">
+        <div class="task-number">14</div>
+        <div class="task-title">Polish & Testing</div>
+      </div>
+      <div class="task-body">
+        <div class="task-section">
+          <div class="task-section-title">Description</div>
+          <p class="task-description">Final polish pass: ensure all views match wireframe exactly, add loading states, error handling, responsive design, and test all flows.</p>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Dependencies</div>
+          <span class="dependency-tag dep-task">Tasks 1-13</span>
+        </div>
+        
+        <div class="wireframe-box">
+          <div class="wireframe-icon">🎨</div>
+          <div class="wireframe-info">
+            <div class="wireframe-label">Wireframe Reference</div>
+            <div class="wireframe-text">admin-review-dashboard-wireframe.html → Compare every view side-by-side</div>
+          </div>
+        </div>
+        
+        <div class="task-section">
+          <div class="task-section-title">Checklist</div>
+          <ul class="checkbox-list">
+            <li><input type="checkbox" onchange="updateProgress()"> All views match wireframe pixel-perfect</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Loading states on all data fetches</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Error states for failed API calls</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Empty states for no data</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Responsive design works on mobile/tablet</li>
+            <li><input type="checkbox" onchange="updateProgress()"> All navigation flows work correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Toast notifications for success/error</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Form validation messages clear</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Buttons disabled during API calls</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Browser back/forward work correctly</li>
+            <li><input type="checkbox" onchange="updateProgress()"> No console errors or warnings</li>
+            <li><input type="checkbox" onchange="updateProgress()"> TypeScript compiles with no errors</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test: Dashboard → Click stat card → Verify filter</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test: List filters → Search → Sort → Paginate</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test: Detail view all sections → Add note → Actions</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test: Reject flow with quick reasons</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test: Approve flow and school provisioning</li>
+            <li><input type="checkbox" onchange="updateProgress()"> Test: Error scenarios (404, network errors)</li>
+          </ul>
+        </div>
+        
+        <div class="note">
+          <strong>Final Step:</strong> Compare your implementation side-by-side with the wireframe. They should match exactly!
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <p>EK-SMS Admin Review Dashboard Frontend Tasks</p>
+      <p>Document Version 1.0 • January 2026</p>
+      <p>Feature Branch: feature/admin-review-dashboard</p>
+    </footer>
+  </div>
+  
+  <script>
+    function updateProgress() {
+      const checkboxes = document.querySelectorAll('.checkbox-list input[type="checkbox"]');
+      const total = checkboxes.length;
+      const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+      const percentage = (checked / total) * 100;
+      
+      document.getElementById('progressBar').style.width = percentage + '%';
+      document.getElementById('completedCount').textContent = checked;
+      
+      // Save to localStorage
+      const checkedValues = Array.from(checkboxes).map(cb => cb.checked);
+      localStorage.setItem('adminReviewProgress', JSON.stringify(checkedValues));
+    }
+    
+    // Load progress from localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('adminReviewProgress');
+      if (saved) {
+        const checkedValues = JSON.parse(saved);
+        const checkboxes = document.querySelectorAll('.checkbox-list input[type="checkbox"]');
+        checkboxes.forEach((cb, index) => {
+          if (checkedValues[index]) {
+            cb.checked = true;
+          }
+        });
+        updateProgress();
+      }
+    });
+  </script>
+</body>
+</html>

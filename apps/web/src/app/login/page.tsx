@@ -1,97 +1,122 @@
-/**
- * Login Page
- *
- * User authentication entry point.
- */
+'use client';
 
-import Link from "next/link";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts';
 
 export default function LoginPage() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
+    const { login, user, isAuthenticated } = useAuth();
+
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            if (user.role === 'platform_admin') {
+                router.push('/admin/dashboard');
+            } else {
+                router.push('/');
+            }
+        }
+    }, [isAuthenticated, user, router]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setIsLoading(true);
+
+        try {
+            const result = await login({ email, password });
+
+            if (result.error) {
+                setError(result.error);
+            }
+            // Navigation handled by useEffect when user state updates
+        } catch {
+            setError('An unexpected error occurred. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold text-gray-900">Sign In</h1>
-                    <p className="mt-2 text-gray-600">
-                        Access your EK-SMS dashboard
-                    </p>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
+            <div className="w-full max-w-md">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h1 className="text-4xl font-bold text-slate-900 mb-2">EK-SMS</h1>
+                    <p className="text-slate-600 font-medium">Platform Administrator Login</p>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-md p-8">
-                    <form className="space-y-6">
+                {/* Login Card */}
+                <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Email Field */}
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Email address
+                            <label htmlFor="email" className="block text-sm font-bold text-slate-700 mb-2">
+                                Email Address
                             </label>
                             <input
                                 id="email"
-                                name="email"
                                 type="email"
-                                autoComplete="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="you@example.com"
+                                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                placeholder="admin@example.com"
+                                disabled={isLoading}
                             />
                         </div>
 
+                        {/* Password Field */}
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="password" className="block text-sm font-bold text-slate-700 mb-2">
                                 Password
                             </label>
                             <input
                                 id="password"
-                                name="password"
                                 type="password"
-                                autoComplete="current-password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                                 placeholder="••••••••"
+                                disabled={isLoading}
                             />
                         </div>
 
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                                <input
-                                    id="remember-me"
-                                    name="remember-me"
-                                    type="checkbox"
-                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                />
-                                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                                    Remember me
-                                </label>
+                        {/* Error Message */}
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                                {error}
                             </div>
+                        )}
 
-                            <div className="text-sm">
-                                <a href="#" className="text-blue-600 hover:text-blue-500">
-                                    Forgot password?
-                                </a>
-                            </div>
-                        </div>
-
+                        {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            disabled={isLoading}
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-xl disabled:cursor-not-allowed"
                         >
-                            Sign in
+                            {isLoading ? 'Signing in...' : 'Sign In'}
                         </button>
                     </form>
 
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-600">
-                            Don&apos;t have an account?{" "}
-                            <Link href="/register" className="text-blue-600 hover:text-blue-500 font-medium">
-                                Register your school
-                            </Link>
+                    {/* Development Note */}
+                    <div className="mt-6 pt-6 border-t border-slate-200">
+                        <p className="text-xs text-slate-500 text-center">
+                            For development: Use your platform admin credentials
                         </p>
                     </div>
                 </div>
 
-                <div className="text-center">
-                    <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
-                        ← Back to Home
-                    </Link>
-                </div>
+                {/* Footer */}
+                <p className="text-center text-sm text-slate-500 mt-6">
+                    EL-KENDEH Smart School Management System
+                </p>
             </div>
         </div>
     );
