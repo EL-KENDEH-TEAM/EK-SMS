@@ -67,6 +67,7 @@ from app.modules.school_applications.models import (
 from app.modules.school_applications.schemas import (
     ApplicationStatusResponse,
     ConfirmPrincipalResponse,
+    PrincipalViewResponse,
     ResendVerificationResponse,
     SchoolApplicationCreate,
     SchoolApplicationResponse,
@@ -680,6 +681,56 @@ async def verify_applicant(
             requires_principal_confirmation=True,
             principal_email_hint=_mask_email(application.principal_email),
         )
+
+
+async def get_principal_view(
+    db: AsyncSession,
+    token_string: str,
+) -> PrincipalViewResponse:
+    """
+    Get application details for principal to review before confirming.
+
+    This endpoint allows the principal to see a summary of the application
+    before they confirm it. The token is validated but NOT marked as used.
+
+    Args:
+        db: Database session
+        token_string: The confirmation token from the email
+
+    Returns:
+        PrincipalViewResponse with application summary
+
+    Raises:
+        InvalidTokenError: If token is invalid
+        TokenExpiredError: If token has expired
+        TokenAlreadyUsedError: If token was already used
+        InvalidApplicationStateError: If application not in correct state
+    """
+    logger.info("Processing principal view request")
+
+    # Validate the token (don't mark as used - that happens on confirmation)
+    _, application = await _validate_token(db, token_string, TokenType.PRINCIPAL_CONFIRMATION)
+
+    # Verify application is in correct state
+    if application.status != ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION:
+        logger.warning(
+            f"Application {application.id} not in AWAITING_PRINCIPAL_CONFIRMATION state: "
+            f"{application.status}"
+        )
+        raise InvalidApplicationStateError(
+            "This application is not awaiting principal confirmation.",
+            expected_state=ApplicationStatus.AWAITING_PRINCIPAL_CONFIRMATION.value,
+        )
+
+    # Get the applicant name (the person who submitted, not the principal)
+    applicant_name = application.applicant_name or application.principal_name
+
+    return PrincipalViewResponse(
+        id=application.id,
+        school_name=application.school_name,
+        applicant_name=applicant_name,
+        admin_choice=application.admin_choice,
+    )
 
 
 async def confirm_principal(
