@@ -175,6 +175,20 @@ class ResendVerificationResponse(BaseModel):
     expires_at: datetime
 
 
+class PrincipalViewResponse(BaseModel):
+    """Response for GET /school-applications/principal-view.
+
+    Returns application summary for principal to review before confirming.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    school_name: str
+    applicant_name: str
+    admin_choice: AdminChoice
+
+
 class StatusStep(BaseModel):
     """A single step in the application progress."""
 

@@ -37,6 +37,7 @@ from app.modules.school_applications.schemas import (
     ConfirmPrincipalResponse,
     Country,
     CountryListResponse,
+    PrincipalViewResponse,
     ResendVerificationRequest,
     ResendVerificationResponse,
     SchoolApplicationCreate,
@@ -368,6 +369,133 @@ async def verify_applicant(
         raise
     except Exception as e:
         logger.exception(f"Unexpected error verifying applicant: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred. Please try again later.",
+            },
+        ) from e
+
+
+@router.get(
+    "/principal-view",
+    response_model=PrincipalViewResponse,
+    summary="Get Application Details for Principal",
+    description="""
+Get application summary for principal to review before confirming.
+
+This endpoint is called when the principal clicks the confirmation link in their email.
+It returns the application details so the principal can review before confirming.
+
+**Token Requirements:**
+- Must be a valid, unused token
+- Must not be expired (72 hours from creation)
+- Must be of type PRINCIPAL_CONFIRMATION
+- Application must be in AWAITING_PRINCIPAL_CONFIRMATION state
+
+**Note:** This endpoint does NOT mark the token as used. The token is only
+marked as used when the principal confirms via POST /confirm-principal.
+""",
+    responses={
+        200: {
+            "description": "Application details retrieved successfully",
+            "model": PrincipalViewResponse,
+        },
+        400: {
+            "description": "Invalid or expired token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "TOKEN_EXPIRED",
+                        "message": "This verification link has expired. Please request a new one.",
+                    }
+                }
+            },
+        },
+        404: {
+            "description": "Application not found",
+        },
+        409: {
+            "description": "Token already used or application not in correct state",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "INVALID_APPLICATION_STATE",
+                        "message": "This application is not awaiting principal confirmation.",
+                    }
+                }
+            },
+        },
+    },
+)
+async def get_principal_view(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+) -> PrincipalViewResponse:
+    """
+    Get application details for principal to review.
+
+    Returns a summary of the application so the principal can review
+    before confirming. Does not mark the token as used.
+
+    Args:
+        token: The confirmation token from the email
+        db: Database session (injected)
+
+    Returns:
+        Application summary with school name, applicant name, and admin choice
+    """
+    try:
+        response = await service.get_principal_view(
+            db=db,
+            token_string=token,
+        )
+
+        logger.info(f"Principal view retrieved for application {response.id}")
+
+        return response
+
+    except (InvalidTokenError, TokenExpiredError) as e:
+        logger.warning(f"Token validation failed: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except TokenAlreadyUsedError as e:
+        logger.warning(f"Token already used: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except InvalidApplicationStateError as e:
+        logger.warning(f"Invalid application state: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except ApplicationServiceError as e:
+        logger.error(f"Application service error: {e.message}")
+        raise HTTPException(
+            status_code=e.status_code,
+            detail={
+                "error": e.error_code,
+                "message": e.message,
+            },
+        ) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Unexpected error getting principal view: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
