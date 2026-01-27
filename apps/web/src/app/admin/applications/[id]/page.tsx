@@ -137,11 +137,19 @@ export function ApplicationDetailPage() {
         }
     };
 
-    const handleAction = async (action: () => Promise<unknown>, successMsg: string) => {
+    const handleAction = async (action: () => Promise<{ data: unknown; error: string | null }>, successMsg: string) => {
         setIsActionLoading(true);
         try {
-            await action();
-            // In a real app we'd use a toast here
+            const result = await action();
+
+            // Check if the API returned an error
+            if (result.error) {
+                console.error('Action failed:', result.error);
+                alert(`Error: ${result.error}`);
+                return;
+            }
+
+            // Success - refresh data or navigate
             if (successMsg.includes('Rejected') || successMsg.includes('Approved')) {
                 router.push('/admin/applications');
             } else {
@@ -151,8 +159,11 @@ export function ApplicationDetailPage() {
             setShowRejectionModal(false);
             setShowInfoModal(false);
             setShowApproveModal(false);
+            setRejectionReason('');
+            setInfoMessage('');
         } catch (error) {
             console.error('Action failed:', error);
+            alert('An unexpected error occurred. Please try again.');
         } finally {
             setIsActionLoading(false);
         }
